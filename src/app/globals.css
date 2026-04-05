@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Design System — Digital Maître D' */
+
+  /* Colors */
+  --color-primary: #9e3d00;
+  --color-primary-container: #c64f00;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #fffbff;
+  --color-primary-fixed: #ffdbcd;
+  --color-primary-fixed-dim: #ffb595;
+  --color-on-primary-fixed: #351000;
+  --color-on-primary-fixed-variant: #7c2e00;
+  --color-inverse-primary: #ffb595;
+  --color-surface-tint: #a23f00;
+
+  --color-secondary: #5f5e5e;
+  --color-secondary-container: #e4e2e1;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #656464;
+  --color-secondary-fixed: #e4e2e1;
+  --color-secondary-fixed-dim: #c8c6c5;
+  --color-on-secondary-fixed: #1b1c1c;
+  --color-on-secondary-fixed-variant: #474747;
+
+  --color-tertiary: #005ab7;
+  --color-tertiary-container: #0072e4;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #fefcff;
+  --color-tertiary-fixed: #d7e2ff;
+  --color-tertiary-fixed-dim: #abc7ff;
+  --color-on-tertiary-fixed: #001b3f;
+  --color-on-tertiary-fixed-variant: #00458f;
+
+  --color-surface: #fcf9f8;
+  --color-surface-dim: #dcd9d9;
+  --color-surface-bright: #fcf9f8;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f6f3f2;
+  --color-surface-container: #f0eded;
+  --color-surface-container-high: #eae7e7;
+  --color-surface-container-highest: #e5e2e1;
+  --color-surface-variant: #e5e2e1;
+
+  --color-background: #fcf9f8;
+  --color-on-surface: #1c1b1b;
+  --color-on-surface-variant: #5a4138;
+  --color-on-background: #1c1b1b;
+  --color-inverse-surface: #313030;
+  --color-inverse-on-surface: #f3f0ef;
+
+  --color-outline: #8f7066;
+  --color-outline-variant: #e3bfb2;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  /* Typography */
+  --font-headline: "Noto Serif", serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+
+  /* Border radius */
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+  --radius-full: 9999px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
