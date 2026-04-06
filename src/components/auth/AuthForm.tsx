@@ -7,11 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Mode = "login" | "register";
 
-interface AuthFormProps {
-  mode: Mode;
-}
-
-export default function AuthForm({ mode }: AuthFormProps) {
+export default function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -21,6 +17,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,22 +29,15 @@ export default function AuthForm({ mode }: AuthFormProps) {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: { restaurant_name: restaurantName },
-        },
+        options: { data: { restaurant_name: restaurantName } },
       });
-
       if (signUpError) {
         setError(signUpError.message);
       } else {
         setSuccess("Compte créé ! Vérifiez votre email pour confirmer.");
       }
     } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         setError("Email ou mot de passe incorrect.");
       } else {
@@ -59,150 +49,117 @@ export default function AuthForm({ mode }: AuthFormProps) {
     setLoading(false);
   }
 
-  const inputStyle = {
-    backgroundColor: "var(--color-surface-container-low)",
-    color: "var(--color-on-surface)",
-    fontFamily: "var(--font-body)",
-    border: "2px solid transparent",
-    width: "100%",
-    padding: "0.75rem 1rem",
-    borderRadius: "1rem",
-    fontSize: "0.875rem",
-    outline: "none",
-    transition: "border-color 0.15s",
-  };
+  const isLogin = mode === "login";
 
   return (
-    <div
-      className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
-      style={{ backgroundColor: "var(--color-surface-container-lowest)" }}
-    >
+    <div className="w-full max-w-[420px]">
+
       {/* Header */}
-      <div
-        className="px-8 pt-10 pb-6 text-center"
-        style={{
-          background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%)",
-        }}
-      >
-        <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
-          <span
-            className="material-symbols-outlined text-white text-3xl"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            restaurant
-          </span>
-        </div>
+      <div className="mb-8">
         <h1
-          className="text-3xl font-black text-white tracking-tight"
-          style={{ fontFamily: "var(--font-headline)" }}
+          className="text-3xl font-black tracking-tight mb-2"
+          style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}
         >
-          Digital Maître D&apos;
+          {isLogin ? "Bon retour" : "Créez votre espace"}
         </h1>
-        <p
-          className="text-white/80 text-sm mt-1"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          {mode === "login" ? "Connectez-vous à votre espace" : "Créez votre restaurant digital"}
+        <p className="text-[15px]" style={{ color: "#6B5B53" }}>
+          {isLogin
+            ? "Connectez-vous pour gérer votre menu."
+            : "Votre premier menu digital en moins de 3 minutes."}
         </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="px-8 py-8 space-y-4">
-        {mode === "register" && (
-          <div>
-            <label
-              className="block text-xs font-bold uppercase tracking-widest mb-2"
-              style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}
-            >
-              Nom du restaurant *
-            </label>
-            <input
+      <form onSubmit={handleSubmit} className="space-y-5">
+
+        {/* Restaurant name — register only */}
+        {!isLogin && (
+          <Field label="Nom du restaurant">
+            <Input
               type="text"
               required
               value={restaurantName}
               onChange={(e) => setRestaurantName(e.target.value)}
               placeholder="Ex : Le Petit Bistro"
-              style={inputStyle}
-              onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+              icon="storefront"
             />
-          </div>
+          </Field>
         )}
 
-        <div>
-          <label
-            className="block text-xs font-bold uppercase tracking-widest mb-2"
-            style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}
-          >
-            Email *
-          </label>
-          <input
+        {/* Email */}
+        <Field label="Adresse email">
+          <Input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="chef@restaurant.com"
-            style={inputStyle}
-            onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-            onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+            icon="mail"
           />
-        </div>
+        </Field>
 
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <label
-              className="text-xs font-bold uppercase tracking-widest"
-              style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}
-            >
-              Mot de passe *
-            </label>
-            {mode === "login" && (
+        {/* Password */}
+        <Field
+          label="Mot de passe"
+          hint={isLogin ? undefined : "Minimum 6 caractères"}
+          action={
+            isLogin ? (
               <Link
                 href="/forgot-password"
-                className="text-xs font-bold transition-opacity hover:opacity-70"
-                style={{ color: "var(--color-primary)", fontFamily: "var(--font-label)" }}
+                className="text-xs font-semibold hover:opacity-70 transition-opacity"
+                style={{ color: "var(--color-primary)" }}
               >
-                Oublié ?
+                Mot de passe oublié ?
               </Link>
-            )}
+            ) : undefined
+          }
+        >
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              icon="lock"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A09088] hover:text-[#1C1B1B] transition-colors"
+              tabIndex={-1}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                {showPassword ? "visibility_off" : "visibility"}
+              </span>
+            </button>
           </div>
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            style={inputStyle}
-            onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-            onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
-          />
-          {mode === "register" && (
-            <p className="text-xs mt-1" style={{ color: "var(--color-on-surface-variant)" }}>
-              Minimum 6 caractères
-            </p>
-          )}
-        </div>
+        </Field>
 
         {/* Error */}
         {error && (
           <div
-            className="px-4 py-3 rounded-2xl text-sm flex items-center gap-2"
-            style={{ backgroundColor: "#ffdad6", color: "#93000a", fontFamily: "var(--font-body)" }}
+            className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
+            style={{ backgroundColor: "#FFF0EE", color: "#93000A", border: "1px solid #FFDAD6" }}
           >
-            <span className="material-symbols-outlined text-sm">error_outline</span>
-            {error}
+            <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 17, marginTop: 1 }}>
+              error_outline
+            </span>
+            <span>{error}</span>
           </div>
         )}
 
         {/* Success */}
         {success && (
           <div
-            className="px-4 py-3 rounded-2xl text-sm flex items-center gap-2"
-            style={{ backgroundColor: "#dcfce7", color: "#15803d", fontFamily: "var(--font-body)" }}
+            className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
+            style={{ backgroundColor: "#F0FDF4", color: "#15803D", border: "1px solid #BBF7D0" }}
           >
-            <span className="material-symbols-outlined text-sm">check_circle</span>
-            {success}
+            <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 17, marginTop: 1 }}>
+              check_circle
+            </span>
+            <span>{success}</span>
           </div>
         )}
 
@@ -210,39 +167,100 @@ export default function AuthForm({ mode }: AuthFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 rounded-full font-bold text-white transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed mt-2"
-          style={{
-            background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))",
-            fontFamily: "var(--font-label)",
-            fontSize: "0.9375rem",
-          }}
+          className="w-full flex items-center justify-center gap-2 rounded-full py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-55 disabled:cursor-not-allowed mt-1"
+          style={{ backgroundColor: "var(--color-primary)" }}
         >
           {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
-              {mode === "login" ? "Connexion..." : "Création..."}
-            </span>
+            <>
+              <span className="material-symbols-outlined animate-spin" style={{ fontSize: 18 }}>
+                progress_activity
+              </span>
+              {isLogin ? "Connexion…" : "Création…"}
+            </>
           ) : (
-            mode === "login" ? "Se connecter" : "Créer mon compte"
+            isLogin ? "Se connecter" : "Créer mon compte"
           )}
         </button>
       </form>
 
-      {/* Footer link */}
-      <div
-        className="px-8 pb-8 text-center"
-      >
-        <p className="text-sm" style={{ color: "var(--color-on-surface-variant)", fontFamily: "var(--font-body)" }}>
-          {mode === "login" ? "Pas encore de compte ?" : "Déjà inscrit ?"}{" "}
-          <Link
-            href={mode === "login" ? "/register" : "/login"}
-            className="font-bold transition-opacity hover:opacity-70"
-            style={{ color: "var(--color-primary)" }}
-          >
-            {mode === "login" ? "Créer un compte" : "Se connecter"}
-          </Link>
-        </p>
+      {/* Divider */}
+      <div className="flex items-center gap-3 my-6">
+        <div className="flex-1 h-px" style={{ backgroundColor: "#EDE8E5" }} />
+        <span className="text-xs font-medium" style={{ color: "#A09088" }}>ou</span>
+        <div className="flex-1 h-px" style={{ backgroundColor: "#EDE8E5" }} />
       </div>
+
+      {/* Switch mode */}
+      <p className="text-center text-sm" style={{ color: "#6B5B53" }}>
+        {isLogin ? "Pas encore de compte ?" : "Déjà inscrit ?"}{" "}
+        <Link
+          href={isLogin ? "/register" : "/login"}
+          className="font-bold hover:opacity-70 transition-opacity"
+          style={{ color: "var(--color-primary)" }}
+        >
+          {isLogin ? "Créer un compte" : "Se connecter"}
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+/* ── Helpers ── */
+
+function Field({
+  label,
+  hint,
+  action,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-sm font-semibold" style={{ color: "#1C1B1B" }}>
+          {label}
+        </label>
+        {action}
+      </div>
+      {children}
+      {hint && (
+        <p className="text-xs mt-1.5" style={{ color: "#A09088" }}>{hint}</p>
+      )}
+    </div>
+  );
+}
+
+function Input({
+  icon,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { icon: string }) {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <div
+      className="flex items-center gap-2.5 rounded-xl px-3.5 py-3 transition-colors"
+      style={{
+        border: `1.5px solid ${focused ? "var(--color-primary)" : "#E0D9D5"}`,
+        backgroundColor: focused ? "#FFFBF9" : "#FAFAF9",
+      }}
+    >
+      <span
+        className="material-symbols-outlined flex-shrink-0"
+        style={{ fontSize: 18, color: focused ? "var(--color-primary)" : "#A09088" }}
+      >
+        {icon}
+      </span>
+      <input
+        {...props}
+        onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
+        onBlur={(e) => { setFocused(false); props.onBlur?.(e); }}
+        className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#C0B4AE] min-w-0"
+        style={{ color: "#1C1B1B", fontFamily: "var(--font-body)" }}
+      />
     </div>
   );
 }
