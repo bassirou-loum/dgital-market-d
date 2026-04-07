@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Restaurant, MenuCategory, MenuItem } from "@/types/menu";
+import { Restaurant, MenuCategory, MenuItem, Badge } from "@/types/menu";
 import CategorySidebar from "./CategorySidebar";
 import DishCard from "./DishCard";
 import DishModal from "./DishModal";
 import CategoryModal from "./CategoryModal";
 import DailySpecialPanel from "./DailySpecialPanel";
 import { toggleItemAvailable, saveItem, deleteItem, addCategory } from "@/actions/menu";
-import type { Badge } from "@/types/menu";
 
 function calcPerformance(categories: MenuCategory[]): number {
   const all = categories.flatMap((c) => c.items);
@@ -16,84 +15,66 @@ function calcPerformance(categories: MenuCategory[]): number {
   return Math.round((all.filter((i) => i.available).length / all.length) * 100);
 }
 
-interface MenuEditorClientProps {
+export default function MenuEditorClient({
+  restaurant,
+  menuId,
+  dailySpecialTitle,
+  dailySpecialImage,
+}: {
   restaurant: Restaurant;
   menuId: string;
   dailySpecialTitle?: string | null;
   dailySpecialImage?: string | null;
-}
-
-export default function MenuEditorClient({ restaurant, menuId, dailySpecialTitle, dailySpecialImage }: MenuEditorClientProps) {
-  const [categories, setCategories] = useState<MenuCategory[]>(restaurant.categories);
+}) {
+  const [categories,  setCategories]  = useState<MenuCategory[]>(restaurant.categories);
   const [activeCatId, setActiveCatId] = useState(restaurant.categories[0]?.id ?? "");
-  const [viewGrid, setViewGrid] = useState(true);
-  const [isPending, startTransition] = useTransition();
+  const [viewGrid,    setViewGrid]    = useState(true);
+  const [isPending,   startTransition] = useTransition();
 
-  const [showDishModal, setShowDishModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [showDishModal,     setShowDishModal]     = useState(false);
+  const [editingItem,       setEditingItem]       = useState<MenuItem | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const activeCategory = categories.find((c) => c.id === activeCatId);
+  const performance    = calcPerformance(categories);
 
-  // Toggle availability — optimistic + server action
   function handleToggleAvailable(itemId: string) {
     const item = categories.flatMap((c) => c.items).find((i) => i.id === itemId);
     if (!item) return;
-    const newAvailable = !item.available;
-
+    const next = !item.available;
     setCategories((prev) =>
-      prev.map((cat) => ({
-        ...cat,
-        items: cat.items.map((i) => i.id === itemId ? { ...i, available: newAvailable } : i),
-      }))
+      prev.map((cat) => ({ ...cat, items: cat.items.map((i) => i.id === itemId ? { ...i, available: next } : i) }))
     );
-
-    startTransition(() => {
-      toggleItemAvailable(itemId, newAvailable);
-    });
+    startTransition(() => { toggleItemAvailable(itemId, next); });
   }
 
-  // Save dish (add or edit)
   function handleSaveDish(data: Omit<MenuItem, "id"> & { id?: string }) {
-    // Optimistic update
     setCategories((prev) =>
       prev.map((cat) => {
         if (cat.id !== activeCatId) return cat;
         if (data.id) {
-          return { ...cat, items: cat.items.map((item) => item.id === data.id ? { ...item, ...data, id: item.id } : item) };
-        } else {
-          const newItem: MenuItem = { ...data, id: `item-${Date.now()}` };
-          return { ...cat, items: [...cat.items, newItem] };
+          return { ...cat, items: cat.items.map((i) => i.id === data.id ? { ...i, ...data, id: i.id } : i) };
         }
+        return { ...cat, items: [...cat.items, { ...data, id: `item-${Date.now()}` }] };
       })
     );
     setShowDishModal(false);
     setEditingItem(null);
-
     startTransition(() => {
       saveItem(activeCatId, {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        currency: data.currency,
-        image_url: data.image,
-        available: data.available,
-        badges: data.badges as Badge[],
+        id: data.id, name: data.name, description: data.description,
+        price: data.price, currency: data.currency, image_url: data.image,
+        available: data.available, badges: data.badges as Badge[],
       });
     });
   }
 
-  // Delete dish
   function handleDeleteDish(itemId: string) {
     if (!confirm("Supprimer ce plat ?")) return;
-    setCategories((prev) =>
-      prev.map((cat) => ({ ...cat, items: cat.items.filter((i) => i.id !== itemId) }))
-    );
+    setCategories((prev) => prev.map((cat) => ({ ...cat, items: cat.items.filter((i) => i.id !== itemId) })));
     startTransition(() => { deleteItem(itemId); });
   }
 
-  // Add category
   function handleAddCategory(name: string) {
     const tempId = `cat-${Date.now()}`;
     setCategories((prev) => [...prev, { id: tempId, name, items: [] }]);
@@ -102,52 +83,42 @@ export default function MenuEditorClient({ restaurant, menuId, dailySpecialTitle
     startTransition(() => { addCategory(menuId, name); });
   }
 
-  const performance = calcPerformance(categories);
-
   return (
-    <div className="py-8">
-      {/* Page header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+    <div className="space-y-6">
+
+      {/* ── Page header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2
-            className="text-4xl font-black tracking-tight mb-2"
-            style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}
+            className="text-2xl font-black tracking-tight text-[#1C1B1B]"
+            style={{ fontFamily: "var(--font-headline)" }}
           >
-            Votre expérience culinaire
+            {restaurant.name}
           </h2>
-          <p style={{ fontFamily: "var(--font-body)", color: "var(--color-on-surface-variant)" }}>
-            Gérez vos catégories, prix et disponibilités saisonnières.
+          <p className="text-sm mt-1" style={{ color: "#6B5B53" }}>
+            Gérez vos catégories, prix et disponibilités.
           </p>
         </div>
-        <div className="flex gap-3 flex-shrink-0">
+        <div className="flex gap-2 flex-shrink-0">
           <button
             onClick={() => setShowCategoryModal(true)}
-            className="px-6 py-3 rounded-full font-bold text-sm flex items-center gap-2 transition-all active:scale-95"
-            style={{
-              backgroundColor: "var(--color-surface-container-lowest)",
-              border: "1px solid rgba(227,191,178,0.2)",
-              color: "var(--color-on-surface-variant)",
-              fontFamily: "var(--font-label)",
-            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold border border-[#EDE8E5] bg-white text-[#1C1B1B] hover:bg-[#FAFAF9] transition-colors"
           >
-            <span className="material-symbols-outlined text-lg">create_new_folder</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 17 }}>create_new_folder</span>
             Catégorie
           </button>
           <button
             onClick={() => { setEditingItem(null); setShowDishModal(true); }}
-            className="px-6 py-3 rounded-full font-bold text-sm text-white flex items-center gap-2 transition-all active:scale-95 shadow-lg"
-            style={{
-              background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))",
-              fontFamily: "var(--font-label)",
-            }}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: "var(--color-primary)" }}
           >
-            <span className="material-symbols-outlined text-lg">add_circle</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 17 }}>add</span>
             Ajouter un plat
           </button>
         </div>
       </div>
 
-      {/* Plat du jour */}
+      {/* ── Plat du jour ── */}
       <DailySpecialPanel
         menuId={menuId}
         currentTitle={dailySpecialTitle ?? null}
@@ -155,8 +126,8 @@ export default function MenuEditorClient({ restaurant, menuId, dailySpecialTitle
         allItems={categories.flatMap((c) => c.items)}
       />
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* ── Main grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         <CategorySidebar
           categories={categories}
           activeId={activeCatId}
@@ -167,52 +138,47 @@ export default function MenuEditorClient({ restaurant, menuId, dailySpecialTitle
         {/* Items area */}
         <div className="lg:col-span-9">
           {/* Section header */}
-          <div className="flex items-center justify-between mb-8">
-            <h3
-              className="text-2xl font-bold"
-              style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}
-            >
-              {activeCategory?.name ?? "—"}
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-black text-[#1C1B1B]" style={{ fontFamily: "var(--font-headline)" }}>
+                {activeCategory?.name ?? "—"}
+              </h3>
               <span
-                className="font-normal ml-2"
-                style={{ color: "rgba(90,65,56,0.4)" }}
+                className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: "#F0EDEC", color: "#6B5B53" }}
               >
                 {activeCategory?.items.length ?? 0} plats
               </span>
-            </h3>
-            <div className="flex items-center gap-2">
+              {isPending && (
+                <span className="material-symbols-outlined animate-spin text-sm" style={{ color: "#A09088", fontSize: 16 }}>
+                  progress_activity
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1 bg-white border border-[#EDE8E5] rounded-xl p-1">
               <button
                 onClick={() => setViewGrid(true)}
-                className="p-2 rounded-lg transition-colors"
-                style={{
-                  backgroundColor: viewGrid ? "var(--color-surface-container-low)" : "transparent",
-                  color: viewGrid ? "var(--color-primary)" : "var(--color-on-surface-variant)",
-                }}
+                className="p-1.5 rounded-lg transition-colors"
+                style={{ backgroundColor: viewGrid ? "#FFF0E8" : "transparent", color: viewGrid ? "var(--color-primary)" : "#A09088" }}
               >
-                <span className="material-symbols-outlined">grid_view</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>grid_view</span>
               </button>
               <button
                 onClick={() => setViewGrid(false)}
-                className="p-2 rounded-lg transition-colors"
-                style={{
-                  backgroundColor: !viewGrid ? "var(--color-surface-container-low)" : "transparent",
-                  color: !viewGrid ? "var(--color-primary)" : "rgba(90,65,56,0.4)",
-                }}
+                className="p-1.5 rounded-lg transition-colors"
+                style={{ backgroundColor: !viewGrid ? "#FFF0E8" : "transparent", color: !viewGrid ? "var(--color-primary)" : "#A09088" }}
               >
-                <span className="material-symbols-outlined">format_list_bulleted</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>format_list_bulleted</span>
               </button>
             </div>
           </div>
 
           {/* Cards */}
-          {activeCategory && (
-            <div
-              className={
-                viewGrid
-                  ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-                  : "flex flex-col gap-4"
-              }
-            >
+          {activeCategory ? (
+            <div className={viewGrid
+              ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+              : "flex flex-col gap-3"
+            }>
               {activeCategory.items.map((item) => (
                 <DishCard
                   key={item.id}
@@ -223,42 +189,30 @@ export default function MenuEditorClient({ restaurant, menuId, dailySpecialTitle
                 />
               ))}
 
-              {/* Add new dish card */}
+              {/* Add card */}
               <button
                 onClick={() => { setEditingItem(null); setShowDishModal(true); }}
-                className="group relative rounded-3xl p-6 flex flex-col items-center justify-center transition-colors cursor-pointer"
-                style={{
-                  minHeight: activeCategory.items.length > 0 ? "200px" : "400px",
-                  backgroundColor: "var(--color-surface-container-low)",
-                  border: "2px dashed rgba(227,191,178,0.3)",
-                }}
+                className="rounded-2xl border-2 border-dashed border-[#E0D9D5] flex flex-col items-center justify-center gap-2 p-6 transition-colors hover:border-[#C64F00] hover:bg-[#FFF8F5] group"
+                style={{ minHeight: activeCategory.items.length > 0 ? "180px" : "320px" }}
               >
                 <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
-                  style={{ backgroundColor: "white", color: "var(--color-primary)" }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+                  style={{ backgroundColor: "#FFF0E8" }}
                 >
-                  <span className="material-symbols-outlined text-4xl">add</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: 24, color: "var(--color-primary)" }}>add</span>
                 </div>
-                <p
-                  className="text-xl font-bold"
-                  style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}
-                >
-                  Nouveau plat
-                </p>
-                <p
-                  className="text-xs mt-2 text-center px-8 uppercase tracking-widest font-bold"
-                  style={{ color: "var(--color-on-surface-variant)" }}
-                >
+                <p className="text-sm font-bold text-[#1C1B1B]">Nouveau plat</p>
+                <p className="text-xs text-center" style={{ color: "#A09088" }}>
                   Ajouter dans {activeCategory.name}
                 </p>
               </button>
             </div>
-          )}
-
-          {!activeCategory && (
-            <div className="text-center py-20" style={{ color: "var(--color-on-surface-variant)" }}>
-              <span className="material-symbols-outlined text-6xl opacity-20">restaurant_menu</span>
-              <p className="mt-4 font-bold">Sélectionnez une catégorie</p>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <span className="material-symbols-outlined" style={{ fontSize: 40, color: "#E0D9D5" }}>restaurant_menu</span>
+              <p className="mt-3 text-sm font-medium" style={{ color: "#A09088" }}>
+                Sélectionnez une catégorie
+              </p>
             </div>
           )}
         </div>

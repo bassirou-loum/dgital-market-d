@@ -2,50 +2,43 @@
 
 import { Restaurant } from "@/types/menu";
 
-interface MenuHeaderProps {
-  restaurant: Restaurant;
-}
-
-export default function MenuHeader({ restaurant }: MenuHeaderProps) {
+export default function MenuHeader({ restaurant }: { restaurant: Restaurant }) {
   return (
-    <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm">
-      <div className="flex justify-between items-center px-6 py-4 max-w-screen-sm mx-auto">
-        <div className="flex items-center gap-3">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 bg-white"
+      style={{ borderBottom: "1px solid #EDE8E5" }}
+    >
+      <div className="flex items-center justify-between px-5 py-3.5 max-w-lg mx-auto">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-            style={{ backgroundColor: "var(--color-primary-container)" }}
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+            style={{ backgroundColor: "var(--color-primary)" }}
           >
-            <span className="material-symbols-outlined text-xl">restaurant</span>
+            <span className="material-symbols-outlined text-white" style={{ fontSize: 18 }}>restaurant</span>
           </div>
-          <div className="flex flex-col">
+          <div className="min-w-0">
             <h1
-              className="text-xl font-black tracking-tight"
-              style={{
-                fontFamily: "var(--font-headline)",
-                color: "var(--color-primary)",
-              }}
+              className="text-[15px] font-black leading-tight truncate"
+              style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}
             >
               {restaurant.name}
             </h1>
-            <span
-              className="text-[10px] uppercase tracking-widest"
-              style={{
-                fontFamily: "var(--font-label)",
-                color: "var(--color-on-surface-variant)",
-                opacity: 0.7,
-              }}
-            >
-              {restaurant.address}
-            </span>
+            {restaurant.address && (
+              <p className="text-[11px] truncate mt-0.5" style={{ color: "#A09088" }}>
+                {restaurant.address}
+              </p>
+            )}
           </div>
         </div>
-        <button
-          className="p-2 rounded-xl transition-all active:scale-95"
-          style={{ color: "var(--color-primary)" }}
-          aria-label="Rechercher"
+
+        {/* Online badge */}
+        <div
+          className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+          style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0" }}
         >
-          <span className="material-symbols-outlined">search</span>
-        </button>
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse" />
+          <span className="text-[11px] font-bold" style={{ color: "#15803D" }}>En ligne</span>
+        </div>
       </div>
     </header>
   );

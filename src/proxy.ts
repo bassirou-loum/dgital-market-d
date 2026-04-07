@@ -29,6 +29,14 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Routes superadmin
+  if (pathname.startsWith("/superadmin")) {
+    if (!user || user.email !== "admin@admin.com") {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+    return supabaseResponse;
+  }
+
   // Routes protégées (admin)
   const adminRoutes = ["/dashboard", "/menu-editor", "/qr", "/settings"];
   const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
@@ -39,10 +47,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Si déjà connecté, redirige depuis login/register vers dashboard
+  // Si déjà connecté, redirige depuis login/register
   const authOnlyRoutes = ["/login", "/register", "/forgot-password"];
   if (authOnlyRoutes.includes(pathname) && user) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const dest = user.email === "admin@admin.com" ? "/superadmin" : "/dashboard";
+    return NextResponse.redirect(new URL(dest, request.url));
   }
 
   return supabaseResponse;

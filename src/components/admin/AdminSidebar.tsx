@@ -4,21 +4,22 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", icon: "dashboard", label: "Vue d'ensemble" },
-  { href: "/menu-editor", icon: "restaurant_menu", label: "Éditeur de menu" },
-  { href: "/qr", icon: "qr_code_2", label: "Générateur QR" },
-  { href: "/settings", icon: "settings", label: "Paramètres" },
+const NAV = [
+  { href: "/dashboard",   icon: "grid_view",        label: "Vue d'ensemble" },
+  { href: "/menu-editor", icon: "restaurant_menu",   label: "Éditeur de menu" },
+  { href: "/qr",          icon: "qr_code_2",         label: "QR Code" },
+  { href: "/settings",    icon: "settings",          label: "Paramètres" },
 ];
 
-interface AdminSidebarProps {
+export default function AdminSidebar({
+  restaurantName,
+  restaurantSlug,
+}: {
   restaurantName: string;
   restaurantSlug: string;
-}
-
-export default function AdminSidebar({ restaurantName, restaurantSlug }: AdminSidebarProps) {
+}) {
   const pathname = usePathname();
-  const router = useRouter();
+  const router   = useRouter();
 
   async function handleLogout() {
     const supabase = createClient();
@@ -29,57 +30,54 @@ export default function AdminSidebar({ restaurantName, restaurantSlug }: AdminSi
 
   return (
     <aside
-      className="hidden md:flex flex-col fixed left-0 top-0 h-full w-64 z-40 p-4"
-      style={{ backgroundColor: "#f6f3f2" }}
+      className="hidden md:flex flex-col fixed left-0 top-0 h-full w-60 z-40"
+      style={{ backgroundColor: "#fff", borderRight: "1px solid #EDE8E5" }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-2 mb-10 pt-4">
+      <div className="flex items-center gap-2.5 px-5 h-16 border-b border-[#EDE8E5] flex-shrink-0">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-          style={{ backgroundColor: "var(--color-primary-container)" }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0"
+          style={{ backgroundColor: "var(--color-primary)" }}
         >
-          <span
-            className="material-symbols-outlined"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            restaurant
-          </span>
+          <span className="material-symbols-outlined text-white" style={{ fontSize: 18 }}>restaurant</span>
         </div>
-        <div>
-          <h2
-            className="text-lg font-bold leading-none"
-            style={{ fontFamily: "var(--font-headline)", color: "#1c1b1b" }}
+        <div className="min-w-0">
+          <p
+            className="font-black text-[13px] leading-tight truncate"
+            style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}
           >
             {restaurantName}
-          </h2>
-          <p
-            className="text-[10px] uppercase tracking-widest mt-0.5"
-            style={{ fontFamily: "var(--font-label)", color: "#5a4138", opacity: 0.6 }}
-          >
-            Admin Console
+          </p>
+          <p className="text-[10px] font-medium mt-0.5" style={{ color: "#A09088" }}>
+            Espace admin
           </p>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <p className="text-[10px] font-bold uppercase tracking-widest px-3 pb-2 pt-1" style={{ color: "#A09088" }}>
+          Navigation
+        </p>
+        {NAV.map((item) => {
+          const active = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
               style={{
-                borderRadius: isActive ? "0 9999px 9999px 0" : "0",
-                backgroundColor: isActive ? "rgba(158, 61, 0, 0.1)" : "transparent",
-                color: isActive ? "var(--color-primary)" : "#5a4138",
-                fontFamily: "var(--font-body)",
-                fontWeight: isActive ? 700 : 500,
-                transform: isActive ? "none" : undefined,
+                backgroundColor: active ? "#FFF0E8" : "transparent",
+                color: active ? "var(--color-primary)" : "#6B5B53",
+                fontWeight: active ? 700 : 500,
               }}
             >
-              <span className="material-symbols-outlined">{item.icon}</span>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 20, color: active ? "var(--color-primary)" : "#A09088" }}
+              >
+                {item.icon}
+              </span>
               {item.label}
             </Link>
           );
@@ -87,32 +85,22 @@ export default function AdminSidebar({ restaurantName, restaurantSlug }: AdminSi
       </nav>
 
       {/* Bottom */}
-      <div className="mt-auto space-y-3 pb-4">
+      <div className="px-3 pb-4 space-y-1 border-t border-[#EDE8E5] pt-3 flex-shrink-0">
         <Link
           href={`/menu/${restaurantSlug}`}
           target="_blank"
-          className="block w-full py-3 px-4 rounded-full text-white text-sm font-bold text-center transition-all hover:brightness-110 active:scale-95"
-          style={{
-            background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))",
-            fontFamily: "var(--font-label)",
-          }}
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+          style={{ backgroundColor: "var(--color-primary)", color: "#fff" }}
         >
-          Aperçu du menu
-        </Link>
-        <Link
-          href="#"
-          className="flex items-center gap-3 px-4 py-3 text-sm font-medium"
-          style={{ color: "#5a4138", fontFamily: "var(--font-body)" }}
-        >
-          <span className="material-symbols-outlined">help_outline</span>
-          Centre d&apos;aide
+          <span className="material-symbols-outlined" style={{ fontSize: 17 }}>open_in_new</span>
+          Voir mon menu
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 text-sm font-medium w-full transition-opacity hover:opacity-70"
-          style={{ color: "var(--color-error)", fontFamily: "var(--font-body)" }}
+          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium w-full rounded-xl transition-colors hover:bg-red-50"
+          style={{ color: "#BA1A1A" }}
         >
-          <span className="material-symbols-outlined">logout</span>
+          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>logout</span>
           Se déconnecter
         </button>
       </div>

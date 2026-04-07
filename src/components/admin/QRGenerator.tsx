@@ -3,21 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 
-const ACCENT_COLORS = [
+const COLORS = [
   { value: "#9e3d00", label: "Terracotta" },
   { value: "#1c1b1b", label: "Noir" },
-  { value: "#f5c6a0", label: "Crème" },
   { value: "#065f46", label: "Vert" },
+  { value: "#1e3a8a", label: "Bleu" },
 ];
 
-interface QRGeneratorProps {
+export default function QRGenerator({
+  restaurantName,
+  menuUrl,
+}: {
   restaurantName: string;
   menuUrl: string;
-}
-
-export default function QRGenerator({ restaurantName, menuUrl }: QRGeneratorProps) {
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [accentColor, setAccentColor] = useState(ACCENT_COLORS[0].value);
+  const [color, setColor]           = useState(COLORS[0].value);
   const [includeLogo, setIncludeLogo] = useState(true);
   const [roundedDots, setRoundedDots] = useState(false);
 
@@ -26,49 +27,27 @@ export default function QRGenerator({ restaurantName, menuUrl }: QRGeneratorProp
     QRCode.toCanvas(canvasRef.current, menuUrl, {
       width: 256,
       margin: 2,
-      color: {
-        dark: accentColor,
-        light: "#ffffff",
-      },
+      color: { dark: color, light: "#ffffff" },
       errorCorrectionLevel: includeLogo ? "H" : "M",
     });
-  }, [menuUrl, accentColor, includeLogo]);
+  }, [menuUrl, color, includeLogo]);
 
-  const downloadPNG = () => {
+  function downloadPNG() {
     if (!canvasRef.current) return;
-    const link = document.createElement("a");
-    link.download = `qr-${restaurantName.toLowerCase().replace(/\s+/g, "-")}.png`;
-    link.href = canvasRef.current.toDataURL("image/png");
-    link.click();
-  };
+    const a = document.createElement("a");
+    a.download = `qr-${restaurantName.toLowerCase().replace(/\s+/g, "-")}.png`;
+    a.href = canvasRef.current.toDataURL("image/png");
+    a.click();
+  }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-      {/* QR Display */}
-      <section
-        className="lg:col-span-7 rounded-3xl p-8 lg:p-12 flex flex-col items-center justify-center relative overflow-hidden"
-        style={{ backgroundColor: "var(--color-surface-container-low)" }}
-      >
-        {/* Subtle dot pattern */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-5"
-          style={{
-            backgroundImage: "radial-gradient(circle at 2px 2px, #8f7066 1px, transparent 0)",
-            backgroundSize: "12px 12px",
-          }}
-        />
+    <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-start">
 
-        <div
-          className="relative z-10 bg-white p-8 rounded-[2rem]"
-          style={{
-            boxShadow: "0 20px 40px rgba(90,65,56,0.06)",
-            border: "1px solid rgba(227,191,178,0.1)",
-          }}
-        >
-          <div
-            className="relative w-64 h-64 flex items-center justify-center overflow-hidden rounded-xl"
-            style={{ backgroundColor: "#f8f8f8", border: "1px solid #f0f0f0" }}
-          >
+      {/* ── QR preview ── */}
+      <div className="bg-white rounded-2xl border border-[#EDE8E5] p-8 flex flex-col items-center">
+        {/* Card */}
+        <div className="bg-[#FAFAF9] rounded-2xl border border-[#EDE8E5] p-8 flex flex-col items-center w-full max-w-xs">
+          <div className="relative w-56 h-56 flex items-center justify-center bg-white rounded-xl border border-[#EDE8E5]">
             <canvas
               ref={canvasRef}
               className="w-full h-full"
@@ -76,13 +55,10 @@ export default function QRGenerator({ restaurantName, menuUrl }: QRGeneratorProp
             />
             {includeLogo && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div
-                  className="bg-white p-1.5 rounded-lg shadow-md"
-                  style={{ border: "1px solid #f0eded" }}
-                >
+                <div className="bg-white p-1.5 rounded-lg border border-[#EDE8E5] shadow-sm">
                   <div
-                    className="w-8 h-8 rounded flex items-center justify-center text-white text-xs font-bold"
-                    style={{ backgroundColor: accentColor, fontFamily: "var(--font-headline)" }}
+                    className="w-8 h-8 rounded flex items-center justify-center text-white text-xs font-black"
+                    style={{ backgroundColor: color, fontFamily: "var(--font-headline)" }}
                   >
                     R
                   </div>
@@ -90,193 +66,152 @@ export default function QRGenerator({ restaurantName, menuUrl }: QRGeneratorProp
               </div>
             )}
           </div>
-
-          <div className="mt-8 text-center">
-            <p
-              className="text-xl font-bold"
-              style={{ fontFamily: "var(--font-headline)", color: "#1c1b1b" }}
-            >
+          <div className="mt-5 text-center">
+            <p className="text-base font-black text-[#1C1B1B]" style={{ fontFamily: "var(--font-headline)" }}>
               Menu — Table #01
             </p>
-            <p
-              className="text-[10px] uppercase tracking-[0.2em] mt-1"
-              style={{ fontFamily: "var(--font-label)", color: "#a8a29e" }}
-            >
+            <p className="text-xs mt-1 font-medium" style={{ color: "#A09088" }}>
               {restaurantName}
             </p>
           </div>
         </div>
 
         {/* Download buttons */}
-        <div className="mt-12 flex flex-wrap gap-4 justify-center relative z-10">
+        <div className="flex flex-wrap gap-3 mt-6 justify-center">
           <button
             onClick={downloadPNG}
-            className="flex items-center gap-2 px-8 py-4 rounded-full text-white font-bold shadow-lg transition-all hover:scale-[1.02] active:scale-95"
-            style={{
-              backgroundColor: "var(--color-primary-container)",
-              fontFamily: "var(--font-label)",
-            }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: "var(--color-primary)" }}
           >
-            <span className="material-symbols-outlined">download</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>download</span>
             Télécharger PNG
           </button>
           <button
-            className="flex items-center gap-2 px-8 py-4 rounded-full font-bold transition-all active:scale-95"
-            style={{
-              backgroundColor: "var(--color-surface-container-highest)",
-              color: "var(--color-on-surface)",
-              fontFamily: "var(--font-label)",
-            }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border border-[#EDE8E5] text-[#1C1B1B] transition-colors hover:bg-[#FAFAF9]"
           >
-            <span className="material-symbols-outlined">picture_as_pdf</span>
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>picture_as_pdf</span>
             Télécharger PDF
           </button>
         </div>
-      </section>
 
-      {/* Customization Panel */}
-      <aside className="lg:col-span-5 space-y-6">
-        <div
-          className="rounded-3xl p-8"
-          style={{
-            backgroundColor: "var(--color-surface-container-lowest)",
-            boxShadow: "0 4px 20px rgba(90,65,56,0.04)",
-            border: "1px solid rgba(227,191,178,0.05)",
-          }}
+        {/* Live link */}
+        <a
+          href={menuUrl}
+          target="_blank"
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold hover:opacity-70 transition-opacity"
+          style={{ color: "var(--color-primary)" }}
         >
-          <h3
-            className="text-2xl font-bold mb-6"
-            style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}
-          >
-            Personnaliser
-          </h3>
+          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>open_in_new</span>
+          Voir l&apos;aperçu du menu en direct
+        </a>
+      </div>
 
-          {/* Color picker */}
-          <div className="mb-6">
-            <label
-              className="block text-[10px] uppercase tracking-widest mb-3"
-              style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}
-            >
-              Couleur du cadre
-            </label>
-            <div className="flex gap-3">
-              {ACCENT_COLORS.map((c) => (
-                <button
-                  key={c.value}
-                  onClick={() => setAccentColor(c.value)}
-                  className="w-10 h-10 rounded-full transition-transform hover:scale-110"
-                  style={{
-                    backgroundColor: c.value,
-                    border: accentColor === c.value ? "4px solid white" : "2px solid transparent",
-                    outline: accentColor === c.value ? `2px solid ${c.value}` : "none",
-                  }}
-                  title={c.label}
-                />
-              ))}
-            </div>
+      {/* ── Settings panel ── */}
+      <div className="space-y-4">
+
+        {/* Customization */}
+        <div className="bg-white rounded-2xl border border-[#EDE8E5] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#EDE8E5]">
+            <h3 className="text-sm font-black text-[#1C1B1B]" style={{ fontFamily: "var(--font-headline)" }}>
+              Personnaliser
+            </h3>
           </div>
 
-          {/* Toggles */}
-          <div className="space-y-4">
-            <label
-              className="block text-[10px] uppercase tracking-widest mb-2"
-              style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}
-            >
-              Configuration
-            </label>
-
-            {/* Include logo */}
-            <div
-              className="flex items-center justify-between p-4 rounded-2xl"
-              style={{ backgroundColor: "var(--color-surface-container-low)" }}
-            >
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined" style={{ color: "var(--color-primary)" }}>
-                  add_photo_alternate
-                </span>
-                <span className="text-sm font-medium" style={{ fontFamily: "var(--font-body)" }}>
-                  Inclure le logo
-                </span>
+          <div className="px-5 py-5 space-y-5">
+            {/* Color picker */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#A09088" }}>
+                Couleur du QR
+              </p>
+              <div className="flex gap-2.5">
+                {COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    onClick={() => setColor(c.value)}
+                    title={c.label}
+                    className="w-9 h-9 rounded-full transition-transform hover:scale-110"
+                    style={{
+                      backgroundColor: c.value,
+                      outline: color === c.value ? `2px solid ${c.value}` : "none",
+                      outlineOffset: "2px",
+                      border: "2px solid rgba(255,255,255,0.8)",
+                    }}
+                  />
+                ))}
               </div>
-              <button
-                onClick={() => setIncludeLogo(!includeLogo)}
-                className="w-10 h-5 rounded-full relative transition-colors"
-                style={{ backgroundColor: includeLogo ? "var(--color-primary)" : "#d4d0cf" }}
-              >
-                <div
-                  className="absolute top-1 w-3 h-3 bg-white rounded-full transition-all"
-                  style={{ left: includeLogo ? "calc(100% - 16px)" : "4px" }}
-                />
-              </button>
             </div>
 
-            {/* Rounded dots */}
-            <div
-              className="flex items-center justify-between p-4 rounded-2xl"
-              style={{ backgroundColor: "var(--color-surface-container-low)" }}
-            >
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined" style={{ color: "var(--color-primary)" }}>
-                  rounded_corner
-                </span>
-                <span className="text-sm font-medium" style={{ fontFamily: "var(--font-body)" }}>
-                  Coins arrondis
-                </span>
-              </div>
-              <button
-                onClick={() => setRoundedDots(!roundedDots)}
-                className="w-10 h-5 rounded-full relative transition-colors"
-                style={{ backgroundColor: roundedDots ? "var(--color-primary)" : "#d4d0cf" }}
-              >
-                <div
-                  className="absolute top-1 w-3 h-3 bg-white rounded-full transition-all"
-                  style={{ left: roundedDots ? "calc(100% - 16px)" : "4px" }}
-                />
-              </button>
+            {/* Toggles */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "#A09088" }}>
+                Options
+              </p>
+              <Toggle
+                icon="add_photo_alternate"
+                label="Inclure le logo"
+                checked={includeLogo}
+                onChange={() => setIncludeLogo((v) => !v)}
+              />
+              <Toggle
+                icon="rounded_corner"
+                label="Coins arrondis"
+                checked={roundedDots}
+                onChange={() => setRoundedDots((v) => !v)}
+              />
             </div>
-          </div>
-
-          <div className="pt-5">
-            <a
-              href={menuUrl}
-              target="_blank"
-              className="inline-flex items-center gap-2 text-sm font-bold underline underline-offset-8 transition-all"
-              style={{
-                color: "var(--color-primary)",
-                textDecorationColor: "rgba(158,61,0,0.3)",
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              Voir l&apos;aperçu du menu en direct
-              <span className="material-symbols-outlined text-sm">open_in_new</span>
-            </a>
           </div>
         </div>
 
-        {/* Print tip */}
-        <div
-          className="rounded-3xl p-8 relative overflow-hidden group"
-          style={{ backgroundColor: "var(--color-surface-container-low)" }}
-        >
-          <div className="relative z-10">
-            <h4
-              className="text-lg font-bold mb-2"
-              style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}
-            >
-              Conseil d&apos;impression
-            </h4>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--color-on-surface-variant)", fontFamily: "var(--font-body)" }}>
-              Pour des cartes de table professionnelles, utilisez le format PDF 300 DPI. Cela garantit un scan net même en faible luminosité.
-            </p>
+        {/* Tip */}
+        <div className="bg-[#FFF8F5] rounded-2xl border border-[#F5D5C0] px-5 py-4">
+          <div className="flex items-start gap-3">
+            <span className="material-symbols-outlined flex-shrink-0 mt-0.5" style={{ fontSize: 18, color: "var(--color-primary)" }}>
+              lightbulb
+            </span>
+            <div>
+              <p className="text-sm font-bold text-[#1C1B1B] mb-1">Conseil d&apos;impression</p>
+              <p className="text-sm leading-6" style={{ color: "#6B5B53" }}>
+                Pour des cartes de table professionnelles, utilisez le format PDF 300 DPI. Cela garantit un scan net même en faible luminosité.
+              </p>
+            </div>
           </div>
-          <span
-            className="material-symbols-outlined absolute -right-4 -bottom-4 text-9xl opacity-5 group-hover:rotate-12 transition-transform duration-500"
-            style={{ color: "var(--color-on-surface)" }}
-          >
-            print
-          </span>
         </div>
-      </aside>
+      </div>
+    </div>
+  );
+}
+
+function Toggle({
+  icon,
+  label,
+  checked,
+  onChange,
+}: {
+  icon: string;
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-[#EDE8E5] last:border-0">
+      <div className="flex items-center gap-2.5">
+        <span className="material-symbols-outlined" style={{ fontSize: 18, color: "#A09088" }}>
+          {icon}
+        </span>
+        <span className="text-sm font-medium text-[#1C1B1B]">{label}</span>
+      </div>
+      <button
+        onClick={onChange}
+        className="relative w-10 h-5 rounded-full transition-colors flex-shrink-0"
+        style={{ backgroundColor: checked ? "var(--color-primary)" : "#E0D9D5" }}
+        role="switch"
+        aria-checked={checked}
+      >
+        <span
+          className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all"
+          style={{ left: checked ? "calc(100% - 18px)" : "2px" }}
+        />
+      </button>
     </div>
   );
 }

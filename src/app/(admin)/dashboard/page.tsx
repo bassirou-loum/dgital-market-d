@@ -5,17 +5,6 @@ import { getDashboardStats } from "@/lib/dal/menu";
 
 export const metadata: Metadata = { title: "Dashboard — Digital Maître D'" };
 
-const QUICK_ACTIONS = [
-  { icon: "create_new_folder", label: "Créer une catégorie", sub: "Grouper les plats par type", href: "/menu-editor", accent: true },
-  { icon: "add_circle", label: "Ajouter un plat", sub: "Mettre à jour les offres", href: "/menu-editor", accent: true },
-  { icon: "download", label: "Télécharger le QR code", sub: "Imprimer pour les tables", href: "/qr", accent: false },
-];
-
-const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  true:  { bg: "#dcfce7", text: "#15803d", label: "En ligne" },
-  false: { bg: "#fff7ed", text: "#c2410c", label: "Épuisé" },
-};
-
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return "Bonjour";
@@ -32,180 +21,230 @@ function timeAgo(dateStr: string): string {
   return `il y a ${Math.floor(hours / 24)}j`;
 }
 
+const PLAN_LABEL: Record<string, string> = {
+  gratuit: "Gratuit",
+  standard: "Standard",
+  premium: "Premium",
+};
+
+const PLAN_COLOR: Record<string, { bg: string; text: string }> = {
+  gratuit:  { bg: "#F0EDEC", text: "#6B5B53" },
+  standard: { bg: "#FFF0E8", text: "var(--color-primary)" },
+  premium:  { bg: "#1C1B1B", text: "#FFB595" },
+};
+
+const QUICK_ACTIONS = [
+  { icon: "add_circle",       label: "Ajouter un plat",      sub: "Enrichir votre carte",         href: "/menu-editor" },
+  { icon: "create_new_folder",label: "Nouvelle catégorie",    sub: "Organiser votre menu",          href: "/menu-editor" },
+  { icon: "qr_code_2",        label: "Télécharger le QR",     sub: "Imprimer pour les tables",      href: "/qr" },
+];
+
 export default async function DashboardPage() {
   const restaurant = await getMyRestaurant();
   const stats = await getDashboardStats(restaurant.id);
 
-  const planLabel: Record<string, string> = {
-    gratuit: "Gratuit",
-    standard: "Standard",
-    premium: "Premium",
-  };
+  const planBadge = PLAN_COLOR[restaurant.plan] ?? PLAN_COLOR.gratuit;
 
   return (
-    <div className="py-8">
-      {/* Welcome */}
-      <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="space-y-8">
+
+      {/* ── Header ── */}
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1
-            className="text-4xl md:text-5xl font-black tracking-tight mb-2"
-            style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}
-          >
-            {getGreeting()}, Chef.
-          </h1>
-          <p style={{ color: "var(--color-on-surface-variant)", fontFamily: "var(--font-body)" }}>
-            Bienvenue sur votre espace {restaurant.name}.
+          <p className="text-sm font-medium mb-1" style={{ color: "#A09088" }}>
+            {getGreeting()} 👋
           </p>
+          <h1
+            className="text-3xl md:text-4xl font-black tracking-tight"
+            style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}
+          >
+            {restaurant.name}
+          </h1>
         </div>
-        <div
-          className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase text-white self-start"
-          style={{ backgroundColor: "var(--color-tertiary-container)", fontFamily: "var(--font-label)" }}
-        >
-          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-          Plan {planLabel[restaurant.plan]}
+        <div className="flex items-center gap-3">
+          <span
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+            style={{ backgroundColor: planBadge.bg, color: planBadge.text }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: planBadge.text, opacity: 0.7 }} />
+            Plan {PLAN_LABEL[restaurant.plan]}
+          </span>
+          <Link
+            href={`/menu/${restaurant.slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors hover:bg-white"
+            style={{ borderColor: "#EDE8E5", color: "#6B5B53", backgroundColor: "#fff" }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
+            Voir le menu
+          </Link>
         </div>
       </header>
 
-      {/* Stats Bento */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+      {/* ── Stats ── */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Total views — large card */}
         <div
-          className="md:col-span-2 p-8 rounded-3xl relative overflow-hidden group"
-          style={{ backgroundColor: "var(--color-surface-container-lowest)", boxShadow: "0 20px 40px rgba(90,65,56,0.04)" }}
+          className="col-span-2 bg-white rounded-2xl border border-[#EDE8E5] p-6"
         >
-          <div className="relative z-10">
-            <p className="text-sm font-bold tracking-widest uppercase mb-1" style={{ color: "var(--color-outline)", fontFamily: "var(--font-label)" }}>
-              Vues totales du menu
-            </p>
-            <h3 className="text-6xl font-black leading-none mb-4" style={{ fontFamily: "var(--font-headline)", color: "var(--color-primary)" }}>
-              {stats.totalViews.toLocaleString("fr-FR")}
-            </h3>
-            {stats.weekGrowth !== 0 && (
-              <div className={`flex items-center gap-2 font-bold text-sm ${stats.weekGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
-                <span className="material-symbols-outlined text-sm">
-                  {stats.weekGrowth >= 0 ? "trending_up" : "trending_down"}
-                </span>
-                {stats.weekGrowth >= 0 ? "+" : ""}{stats.weekGrowth}% cette semaine
-              </div>
-            )}
-          </div>
-          <span
-            className="material-symbols-outlined absolute -right-10 -bottom-10 text-[200px] opacity-5 group-hover:scale-110 transition-transform duration-700"
-            style={{ fontVariationSettings: "'FILL' 1" }}
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#A09088" }}>
+            Vues totales du menu
+          </p>
+          <p
+            className="text-5xl font-black leading-none"
+            style={{ fontFamily: "var(--font-headline)", color: "var(--color-primary)" }}
           >
-            analytics
-          </span>
+            {stats.totalViews.toLocaleString("fr-FR")}
+          </p>
+          {stats.weekGrowth !== 0 && (
+            <div className={`flex items-center gap-1 mt-3 text-sm font-semibold ${stats.weekGrowth >= 0 ? "text-green-600" : "text-red-500"}`}>
+              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+                {stats.weekGrowth >= 0 ? "trending_up" : "trending_down"}
+              </span>
+              {stats.weekGrowth >= 0 ? "+" : ""}{stats.weekGrowth}% cette semaine
+            </div>
+          )}
         </div>
 
-        <div className="p-8 rounded-3xl flex flex-col justify-between" style={{ backgroundColor: "var(--color-surface-container-low)" }}>
-          <div>
-            <p className="text-sm font-bold tracking-widest uppercase mb-1" style={{ color: "var(--color-outline)", fontFamily: "var(--font-label)" }}>
-              Plan actif
-            </p>
-            <h3 className="text-3xl font-bold" style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}>
-              {planLabel[restaurant.plan]}
-            </h3>
-          </div>
-          <Link
-            href="/settings"
-            className="text-sm font-bold pb-0.5 self-start mt-4 border-b transition-opacity hover:opacity-70"
-            style={{ color: "var(--color-primary)", borderColor: "var(--color-primary)", fontFamily: "var(--font-body)" }}
+        {/* Scans today */}
+        <div className="bg-white rounded-2xl border border-[#EDE8E5] p-6 flex flex-col justify-between">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#A09088" }}>
+            Scans aujourd&apos;hui
+          </p>
+          <p
+            className="text-4xl font-black"
+            style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}
           >
-            Gérer l&apos;abonnement
-          </Link>
-        </div>
-
-        <div className="p-8 rounded-3xl flex flex-col justify-between" style={{ backgroundColor: "var(--color-surface-container-low)" }}>
-          <div>
-            <p className="text-sm font-bold tracking-widest uppercase mb-1" style={{ color: "var(--color-outline)", fontFamily: "var(--font-label)" }}>
-              Scans aujourd&apos;hui
-            </p>
-            <h3 className="text-4xl font-black" style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}>
-              {stats.scansToday.toLocaleString("fr-FR")}
-            </h3>
-          </div>
-          <div className="flex items-center gap-1 text-sm mt-4" style={{ color: "var(--color-on-surface-variant)" }}>
-            <span className="material-symbols-outlined text-sm">qr_code_scanner</span>
+            {stats.scansToday.toLocaleString("fr-FR")}
+          </p>
+          <div className="flex items-center gap-1 mt-3 text-xs" style={{ color: "#A09088" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>qr_code_scanner</span>
             Via QR code
           </div>
         </div>
+
+        {/* Plan */}
+        <div className="bg-white rounded-2xl border border-[#EDE8E5] p-6 flex flex-col justify-between">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#A09088" }}>
+            Abonnement
+          </p>
+          <p
+            className="text-2xl font-black"
+            style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}
+          >
+            {PLAN_LABEL[restaurant.plan]}
+          </p>
+          <Link
+            href="/settings"
+            className="text-xs font-bold mt-3 hover:opacity-70 transition-opacity"
+            style={{ color: "var(--color-primary)" }}
+          >
+            Gérer →
+          </Link>
+        </div>
       </section>
 
-      {/* Quick Actions + Top items */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-        <div className="lg:col-span-1">
-          <h4 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ fontFamily: "var(--font-headline)" }}>
-            Actions rapides
-            <div className="h-px flex-1 ml-2" style={{ backgroundColor: "rgba(227,191,178,0.3)" }} />
-          </h4>
-          <div className="space-y-4">
+      {/* ── Content grid ── */}
+      <div className="grid md:grid-cols-3 gap-6 items-start">
+
+        {/* Quick actions */}
+        <div className="md:col-span-1 bg-white rounded-2xl border border-[#EDE8E5] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#EDE8E5]">
+            <h2 className="text-sm font-black" style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}>
+              Actions rapides
+            </h2>
+          </div>
+          <div className="divide-y divide-[#EDE8E5]">
             {QUICK_ACTIONS.map((action) => (
               <Link
                 key={action.label}
                 href={action.href}
-                className="w-full flex items-center justify-between p-5 rounded-2xl group transition-all active:scale-[0.98] block"
-                style={{ backgroundColor: "var(--color-surface-container-lowest)" }}
+                className="flex items-center gap-3 px-5 py-4 hover:bg-[#FAFAF9] transition-colors group"
               >
-                <div className="flex items-center gap-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: action.accent ? "#fff0e6" : "#f5f5f4", color: action.accent ? "var(--color-primary)" : "var(--color-secondary)" }}
-                  >
-                    <span className="material-symbols-outlined">{action.icon}</span>
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm" style={{ color: "var(--color-on-surface)", fontFamily: "var(--font-body)" }}>{action.label}</p>
-                    <p className="text-xs" style={{ color: "var(--color-on-surface-variant)" }}>{action.sub}</p>
-                  </div>
+                <div
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                  style={{ backgroundColor: "#FFF0E8" }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--color-primary)" }}>
+                    {action.icon}
+                  </span>
                 </div>
-                <span className="material-symbols-outlined" style={{ color: "var(--color-outline)" }}>chevron_right</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-[#1C1B1B] truncate">{action.label}</p>
+                  <p className="text-xs mt-0.5 truncate" style={{ color: "#A09088" }}>{action.sub}</p>
+                </div>
+                <span className="material-symbols-outlined text-[#C0B4AE] group-hover:text-[#6B5B53] transition-colors" style={{ fontSize: 18 }}>
+                  chevron_right
+                </span>
               </Link>
             ))}
           </div>
         </div>
 
-        <div className="lg:col-span-2">
-          <h4 className="text-xl font-bold mb-6 flex items-center gap-2" style={{ fontFamily: "var(--font-headline)" }}>
-            Plats les plus vus
-            <div className="h-px flex-1 ml-2" style={{ backgroundColor: "rgba(227,191,178,0.3)" }} />
-          </h4>
+        {/* Top dishes */}
+        <div className="md:col-span-2 bg-white rounded-2xl border border-[#EDE8E5] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#EDE8E5] flex items-center justify-between">
+            <h2 className="text-sm font-black" style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}>
+              Plats les plus vus
+            </h2>
+            <Link href="/menu-editor" className="text-xs font-semibold hover:opacity-70 transition-opacity" style={{ color: "var(--color-primary)" }}>
+              Gérer le menu
+            </Link>
+          </div>
+
           {stats.topItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {stats.topItems.map((dish) => (
-                <div key={dish.id} className="p-4 rounded-3xl flex gap-4 items-center" style={{ backgroundColor: "var(--color-surface-container-lowest)" }}>
+            <div className="divide-y divide-[#EDE8E5]">
+              {stats.topItems.map((dish, i) => (
+                <div key={dish.id} className="flex items-center gap-4 px-5 py-4">
+                  {/* Rank */}
+                  <span
+                    className="text-sm font-black w-5 text-center flex-shrink-0"
+                    style={{ color: i === 0 ? "var(--color-primary)" : "#C0B4AE" }}
+                  >
+                    {i + 1}
+                  </span>
+                  {/* Image */}
                   {dish.image_url ? (
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
-                      <img src={dish.image_url} alt={dish.name} className="w-full h-full object-cover" />
-                    </div>
+                    <img
+                      src={dish.image_url}
+                      alt={dish.name}
+                      className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                    />
                   ) : (
-                    <div className="w-24 h-24 rounded-2xl flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: "var(--color-surface-container-low)" }}>
-                      <span className="material-symbols-outlined opacity-30">restaurant</span>
+                    <div
+                      className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
+                      style={{ backgroundColor: "#F6F4F2" }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 20, color: "#C0B4AE" }}>restaurant</span>
                     </div>
                   )}
-                  <div>
-                    <h5 className="font-bold text-lg leading-tight" style={{ fontFamily: "var(--font-body)" }}>{dish.name}</h5>
-                    <p className="font-bold mt-1" style={{ fontFamily: "var(--font-headline)", color: "var(--color-primary)" }}>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-[#1C1B1B] truncate">{dish.name}</p>
+                    <p className="text-xs mt-0.5 font-semibold" style={{ color: "var(--color-primary)" }}>
                       {dish.price.toLocaleString("fr-FR")} FCFA
                     </p>
-                    <div className="flex items-center gap-1 mt-2 text-[10px] font-bold" style={{ color: "var(--color-on-surface-variant)" }}>
-                      <span className="material-symbols-outlined text-xs">visibility</span>
-                      {dish.views} vues cette semaine
-                    </div>
+                  </div>
+                  {/* Views */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-black text-[#1C1B1B]">{dish.views}</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: "#A09088" }}>vues / sem.</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-3xl p-12 text-center" style={{ backgroundColor: "var(--color-surface-container-low)" }}>
-              <span className="material-symbols-outlined text-5xl opacity-20">visibility_off</span>
-              <p className="mt-3 font-medium" style={{ color: "var(--color-on-surface-variant)", fontFamily: "var(--font-body)" }}>
-                Pas encore de données de vues.<br />Partagez votre QR code pour commencer.
+            <div className="px-5 py-12 text-center">
+              <span className="material-symbols-outlined" style={{ fontSize: 36, color: "#E0D9D5" }}>visibility_off</span>
+              <p className="mt-3 text-sm font-medium" style={{ color: "#A09088" }}>
+                Pas encore de données.
               </p>
               <Link
                 href="/qr"
-                className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-full text-sm font-bold text-white"
-                style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))" }}
+                className="inline-flex items-center gap-1.5 mt-4 text-sm font-bold hover:opacity-70 transition-opacity"
+                style={{ color: "var(--color-primary)" }}
               >
-                <span className="material-symbols-outlined text-sm">qr_code_2</span>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>qr_code_2</span>
                 Générer mon QR code
               </Link>
             </div>
@@ -213,66 +252,92 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Updates */}
-      <section className="mt-12">
-        <div className="rounded-3xl overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.4)", backdropFilter: "blur(8px)" }}>
-          <div className="px-8 py-6 flex justify-between items-center" style={{ borderBottom: "1px solid rgba(227,191,178,0.15)" }}>
-            <h4 className="text-xl font-bold" style={{ fontFamily: "var(--font-headline)" }}>Mises à jour récentes</h4>
-            <Link href="/menu-editor" className="text-sm font-bold transition-colors hover:text-primary" style={{ color: "var(--color-on-surface-variant)" }}>
-              Voir l&apos;éditeur
-            </Link>
-          </div>
-          {stats.recentItems.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr>
-                    {["Nom du plat", "Catégorie", "Statut", "Modifié"].map((h) => (
-                      <th key={h} className="px-8 py-4 text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--color-outline)", fontFamily: "var(--font-label)" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.recentItems.map((item) => {
-                    const s = STATUS_STYLES[String(item.available)];
-                    return (
-                      <tr key={item.id} className="group transition-colors hover:bg-stone-100/30" style={{ borderTop: "1px solid rgba(227,191,178,0.1)" }}>
-                        <td className="px-8 py-5">
-                          <span className="font-bold text-sm" style={{ fontFamily: "var(--font-body)" }}>{item.name}</span>
-                        </td>
-                        <td className="px-8 py-5 text-sm font-medium" style={{ color: "var(--color-on-surface-variant)" }}>{item.categoryName}</td>
-                        <td className="px-8 py-5">
-                          <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider" style={{ backgroundColor: s.bg, color: s.text }}>
-                            {s.label}
-                          </span>
-                        </td>
-                        <td className="px-8 py-5 text-sm" style={{ color: "var(--color-on-surface-variant)" }}>{timeAgo(item.updatedAt)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="px-8 py-12 text-center" style={{ color: "var(--color-on-surface-variant)" }}>
-              <p style={{ fontFamily: "var(--font-body)" }}>Aucun plat encore. <Link href="/menu-editor" className="font-bold underline" style={{ color: "var(--color-primary)" }}>Ajoutez votre premier plat.</Link></p>
-            </div>
-          )}
+      {/* ── Recent updates table ── */}
+      <section className="bg-white rounded-2xl border border-[#EDE8E5] overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#EDE8E5] flex items-center justify-between">
+          <h2 className="text-sm font-black" style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}>
+            Mises à jour récentes
+          </h2>
+          <Link href="/menu-editor" className="text-xs font-semibold hover:opacity-70 transition-opacity" style={{ color: "var(--color-primary)" }}>
+            Voir l&apos;éditeur
+          </Link>
         </div>
+
+        {stats.recentItems.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr style={{ borderBottom: "1px solid #EDE8E5" }}>
+                  {["Plat", "Catégorie", "Statut", "Modifié"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest"
+                      style={{ color: "#A09088" }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recentItems.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-[#FAFAF9] transition-colors"
+                    style={{ borderBottom: "1px solid #EDE8E5" }}
+                  >
+                    <td className="px-5 py-3.5">
+                      <span className="text-sm font-semibold text-[#1C1B1B]">{item.name}</span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="text-sm" style={{ color: "#6B5B53" }}>{item.categoryName}</span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                        style={
+                          item.available
+                            ? { backgroundColor: "#F0FDF4", color: "#15803D" }
+                            : { backgroundColor: "#FFF7ED", color: "#C2410C" }
+                        }
+                      >
+                        <span
+                          className="w-1.5 h-1.5 rounded-full inline-block"
+                          style={{ backgroundColor: item.available ? "#15803D" : "#C2410C" }}
+                        />
+                        {item.available ? "En ligne" : "Épuisé"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span className="text-sm" style={{ color: "#A09088" }}>{timeAgo(item.updatedAt)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm" style={{ color: "#A09088" }}>
+              Aucun plat encore.{" "}
+              <Link href="/menu-editor" className="font-bold hover:opacity-70 transition-opacity" style={{ color: "var(--color-primary)" }}>
+                Ajoutez votre premier plat.
+              </Link>
+            </p>
+          </div>
+        )}
       </section>
 
-      {/* FAB */}
+      {/* ── FAB mobile ── */}
       <Link
         href="/menu-editor"
-        className="fixed bottom-24 right-6 md:bottom-8 md:right-8 w-14 h-14 rounded-full text-white shadow-xl flex items-center justify-center group active:scale-95 transition-all z-40"
-        style={{ backgroundColor: "var(--color-primary)" }}
+        className="fixed bottom-24 right-5 md:hidden w-13 h-13 rounded-full flex items-center justify-center text-white shadow-lg active:scale-95 transition-transform z-40"
+        style={{ backgroundColor: "var(--color-primary)", width: 52, height: 52 }}
         aria-label="Ajouter un plat"
       >
-        <span className="material-symbols-outlined text-3xl">add</span>
-        <span className="absolute right-full mr-4 text-xs font-bold px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap" style={{ backgroundColor: "var(--color-on-surface)", color: "var(--color-surface)" }}>
-          Ajouter un plat
-        </span>
+        <span className="material-symbols-outlined">add</span>
       </Link>
+
     </div>
   );
 }

@@ -2,181 +2,138 @@
 
 import { MenuItem } from "@/types/menu";
 
-interface DishCardProps {
+function fmt(price: number) {
+  return `${price.toLocaleString("fr-FR")} FCFA`;
+}
+
+export default function DishCard({
+  item,
+  onToggleAvailable,
+  onEdit,
+  onDelete,
+}: {
   item: MenuItem;
   onToggleAvailable: (id: string) => void;
   onEdit: (item: MenuItem) => void;
   onDelete: (id: string) => void;
-}
-
-function formatPrice(price: number): string {
-  return `${price.toLocaleString("fr-FR")} FCFA`;
-}
-
-export default function DishCard({ item, onToggleAvailable, onEdit, onDelete }: DishCardProps) {
+}) {
   const unavailable = !item.available;
 
   return (
     <div
-      className="group relative rounded-3xl overflow-hidden transition-all duration-300"
+      className="bg-white rounded-2xl border overflow-hidden flex flex-col transition-opacity"
       style={{
-        backgroundColor: unavailable
-          ? "rgba(246,243,242,0.5)"
-          : "var(--color-surface-container-lowest)",
-        border: unavailable ? "2px dashed rgba(227,191,178,0.3)" : "none",
-        boxShadow: unavailable ? "none" : undefined,
+        borderColor: unavailable ? "#EDE8E5" : "#EDE8E5",
+        opacity: unavailable ? 0.65 : 1,
       }}
     >
       {/* Image */}
       {item.image ? (
-        <div className={`relative h-48 overflow-hidden ${unavailable ? "opacity-60 grayscale" : ""}`}>
+        <div className="relative h-44 overflow-hidden flex-shrink-0 bg-[#F6F4F2]">
           <img
             src={item.image}
             alt={item.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover"
           />
           {/* Price badge */}
-          {!unavailable && (
-            <div
-              className="absolute top-4 right-4 px-3 py-1 rounded-full shadow-sm"
-              style={{ backgroundColor: "rgba(255,255,255,0.9)", backdropFilter: "blur(4px)" }}
-            >
-              <span
-                className="font-bold text-sm"
-                style={{ fontFamily: "var(--font-headline)", color: "var(--color-primary)" }}
-              >
-                {formatPrice(item.price)}
-              </span>
-            </div>
-          )}
+          <div className="absolute top-3 right-3 bg-white rounded-full px-2.5 py-1 border border-[#EDE8E5]">
+            <span className="text-xs font-black" style={{ color: "var(--color-primary)", fontFamily: "var(--font-headline)" }}>
+              {fmt(item.price)}
+            </span>
+          </div>
           {/* Chef badge */}
           {item.badges?.includes("CHEF") && (
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-3 left-3">
               <span
-                className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full text-white"
-                style={{ backgroundColor: "var(--color-tertiary-container)", fontFamily: "var(--font-label)" }}
+                className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
+                style={{ backgroundColor: "var(--color-primary)" }}
               >
-                Choix du chef
+                Chef
               </span>
             </div>
           )}
-          {/* Out of stock overlay */}
+          {/* Unavailable overlay */}
           {unavailable && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40" style={{ backdropFilter: "blur(2px)" }}>
-              <span
-                className="text-white font-bold text-sm uppercase tracking-widest px-4 py-2 rounded-full"
-                style={{ backgroundColor: "rgba(0,0,0,0.4)", fontFamily: "var(--font-label)" }}
-              >
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <span className="text-white text-xs font-bold uppercase tracking-widest bg-black/50 px-3 py-1.5 rounded-full">
                 Épuisé
               </span>
             </div>
           )}
         </div>
       ) : (
-        /* No image placeholder */
-        <div
-          className="h-20 flex items-center justify-center"
-          style={{ backgroundColor: "var(--color-surface-container-low)" }}
-        >
-          <span className="material-symbols-outlined opacity-20 text-4xl">image_not_supported</span>
+        <div className="h-14 flex items-center justify-center bg-[#F6F4F2] flex-shrink-0">
+          <span className="material-symbols-outlined" style={{ fontSize: 24, color: "#C0B4AE" }}>image_not_supported</span>
         </div>
       )}
 
       {/* Body */}
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-2">
-          <h4
-            className="font-extrabold text-lg leading-tight flex-1 pr-2"
-            style={{
-              fontFamily: "var(--font-body)",
-              color: unavailable ? "var(--color-on-surface-variant)" : "var(--color-on-surface)",
-            }}
-          >
+      <div className="p-4 flex flex-col flex-1">
+        {/* Name + actions */}
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h4 className="font-bold text-[15px] leading-snug text-[#1C1B1B] flex-1 min-w-0">
             {item.name}
           </h4>
-          <div className="flex gap-1">
+          <div className="flex gap-0.5 flex-shrink-0">
             <button
               onClick={() => onEdit(item)}
-              className="p-1 rounded-lg transition-colors"
-              style={{ color: "rgba(90,65,56,0.4)" }}
+              className="p-1.5 rounded-lg hover:bg-[#F6F4F2] transition-colors"
+              style={{ color: "#A09088" }}
               aria-label="Modifier"
             >
-              <span className="material-symbols-outlined text-lg">edit_note</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 17 }}>edit</span>
             </button>
             <button
               onClick={() => onDelete(item.id)}
-              className="p-1 rounded-lg transition-colors hover:text-red-500"
-              style={{ color: "rgba(90,65,56,0.4)" }}
+              className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+              style={{ color: "#A09088" }}
               aria-label="Supprimer"
             >
-              <span className="material-symbols-outlined text-lg">delete_outline</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 17 }}>delete_outline</span>
             </button>
           </div>
         </div>
-        <p
-          className="text-sm mb-4 line-clamp-2"
-          style={{
-            fontFamily: "var(--font-body)",
-            color: unavailable ? "rgba(90,65,56,0.5)" : "var(--color-on-surface-variant)",
-          }}
-        >
+
+        {/* Description */}
+        <p className="text-xs leading-5 line-clamp-2 mb-3 flex-1" style={{ color: "#6B5B53" }}>
           {item.description}
         </p>
 
-        {/* No-image price */}
+        {/* Price (no image) */}
         {!item.image && (
-          <p
-            className="font-bold text-base mb-4"
-            style={{ fontFamily: "var(--font-headline)", color: "var(--color-primary)" }}
-          >
-            {formatPrice(item.price)}
+          <p className="text-sm font-black mb-3" style={{ color: "var(--color-primary)", fontFamily: "var(--font-headline)" }}>
+            {fmt(item.price)}
           </p>
         )}
 
         {/* Footer */}
-        <div
-          className="flex items-center justify-between pt-4"
-          style={{ borderTop: "1px solid rgba(227,191,178,0.1)" }}
-        >
+        <div className="flex items-center justify-between pt-3 border-t border-[#EDE8E5]">
           {/* Badges */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-1 flex-wrap">
             {item.badges?.filter((b) => b !== "CHEF").map((badge) => (
               <span
                 key={badge}
-                className="text-[10px] font-bold uppercase tracking-tighter px-2 py-0.5 rounded"
-                style={{
-                  backgroundColor: "var(--color-surface-container-low)",
-                  color: unavailable ? "rgba(90,65,56,0.4)" : "var(--color-on-surface-variant)",
-                  fontFamily: "var(--font-label)",
-                }}
+                className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded bg-[#F6F4F2]"
+                style={{ color: "#6B5B53" }}
               >
                 {badge}
               </span>
             ))}
           </div>
 
-          {/* Availability toggle */}
-          <label className="flex items-center gap-2 cursor-pointer">
-            <div
-              className="relative w-11 h-6 rounded-full transition-colors"
-              style={{ backgroundColor: item.available ? "var(--color-primary)" : "#d4d0cf" }}
-              onClick={() => onToggleAvailable(item.id)}
-            >
-              <div
-                className="absolute top-[2px] w-5 h-5 bg-white rounded-full transition-all shadow-sm"
-                style={{ left: item.available ? "calc(100% - 22px)" : "2px" }}
-              />
-            </div>
+          {/* Toggle */}
+          <button
+            onClick={() => onToggleAvailable(item.id)}
+            className="relative w-10 h-5 rounded-full transition-colors flex-shrink-0"
+            style={{ backgroundColor: item.available ? "var(--color-primary)" : "#E0D9D5" }}
+            role="switch"
+            aria-checked={item.available}
+          >
             <span
-              className="text-xs font-bold"
-              style={{
-                fontFamily: "var(--font-label)",
-                color: unavailable ? "rgba(90,65,56,0.4)" : "var(--color-on-surface-variant)",
-              }}
-            >
-              {item.available ? "Disponible" : "Indisponible"}
-            </span>
-          </label>
+              className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-all"
+              style={{ left: item.available ? "calc(100% - 18px)" : "2px" }}
+            />
+          </button>
         </div>
       </div>
     </div>

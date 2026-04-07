@@ -1,49 +1,40 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef } from "react";
 import { updateRestaurantProfile, uploadLogo } from "@/actions/restaurant";
 import type { DbRestaurant } from "@/lib/dal/restaurant";
 
-interface SettingsFormProps {
-  restaurant: DbRestaurant;
-}
-
-const PLAN_INFO = {
-  gratuit:  { label: "Gratuit",   color: "#78716c", desc: "1 menu · 10 plats · 3 catégories" },
-  standard: { label: "Standard",  color: "#005ab7", desc: "3 menus · 50 plats · 10 catégories" },
-  premium:  { label: "Premium",   color: "#9e3d00", desc: "Illimité · Stats avancées · Multi-langue" },
+const PLAN_INFO: Record<string, { label: string; desc: string; badge: { bg: string; text: string } }> = {
+  gratuit:  { label: "Gratuit",  desc: "1 menu · 10 plats · 3 catégories",               badge: { bg: "#F0EDEC", text: "#6B5B53" } },
+  standard: { label: "Standard", desc: "3 menus · 50 plats · 10 catégories",              badge: { bg: "#FFF0E8", text: "var(--color-primary)" } },
+  premium:  { label: "Premium",  desc: "Illimité · Statistiques avancées · Multi-langue", badge: { bg: "#1C1B1B", text: "#FFB595" } },
 };
 
-export default function SettingsForm({ restaurant }: SettingsFormProps) {
-  const [name, setName] = useState(restaurant.name);
-  const [address, setAddress] = useState(restaurant.address ?? "");
-  const [phone, setPhone] = useState(restaurant.phone ?? "");
-  const [logoUrl, setLogoUrl] = useState(restaurant.logo_url ?? "");
-  const [logoPreview, setLogoPreview] = useState(restaurant.logo_url ?? "");
-
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+export default function SettingsForm({ restaurant }: { restaurant: DbRestaurant }) {
+  const [name,     setName]     = useState(restaurant.name);
+  const [address,  setAddress]  = useState(restaurant.address ?? "");
+  const [phone,    setPhone]    = useState(restaurant.phone ?? "");
+  const [logoUrl,  setLogoUrl]  = useState(restaurant.logo_url ?? "");
+  const [preview,  setPreview]  = useState(restaurant.logo_url ?? "");
+  const [saving,   setSaving]   = useState(false);
+  const [uploading,setUploading]= useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
-  const [, startTransition] = useTransition();
-
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const plan = PLAN_INFO[restaurant.plan] ?? PLAN_INFO.gratuit;
 
   async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Preview immédiat
-    setLogoPreview(URL.createObjectURL(file));
+    setPreview(URL.createObjectURL(file));
     setUploading(true);
     setFeedback(null);
-
     const fd = new FormData();
     fd.append("logo", file);
     const result = await uploadLogo(fd);
-
     if (result.error) {
       setFeedback({ type: "error", msg: result.error });
-      setLogoPreview(restaurant.logo_url ?? "");
+      setPreview(restaurant.logo_url ?? "");
     } else if (result.url) {
       setLogoUrl(result.url);
     }
@@ -54,9 +45,7 @@ export default function SettingsForm({ restaurant }: SettingsFormProps) {
     e.preventDefault();
     setSaving(true);
     setFeedback(null);
-
     const result = await updateRestaurantProfile({ name, address, phone, logo_url: logoUrl });
-
     if (result?.error) {
       setFeedback({ type: "error", msg: result.error });
     } else {
@@ -65,82 +54,56 @@ export default function SettingsForm({ restaurant }: SettingsFormProps) {
     setSaving(false);
   }
 
-  const plan = PLAN_INFO[restaurant.plan];
-  const inputBase = {
-    backgroundColor: "var(--color-surface-container-low)",
-    color: "var(--color-on-surface)",
-    fontFamily: "var(--font-body)",
-    border: "2px solid transparent",
-    padding: "0.75rem 1rem",
-    borderRadius: "1rem",
-    fontSize: "0.875rem",
-    outline: "none",
-    width: "100%",
-    transition: "border-color 0.15s",
-  };
-
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="max-w-2xl space-y-5">
 
-      {/* Plan actuel */}
-      <section
-        className="rounded-3xl p-6 flex items-center justify-between"
-        style={{ backgroundColor: "var(--color-surface-container-lowest)", boxShadow: "0 4px 20px rgba(90,65,56,0.04)" }}
-      >
+      {/* ── Plan actif ── */}
+      <div className="bg-white rounded-2xl border border-[#EDE8E5] px-5 py-4 flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ fontFamily: "var(--font-label)", color: "var(--color-outline)" }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#A09088" }}>
             Plan actif
           </p>
-          <h3 className="text-2xl font-bold" style={{ fontFamily: "var(--font-headline)", color: plan.color }}>
-            {plan.label}
-          </h3>
-          <p className="text-sm mt-1" style={{ color: "var(--color-on-surface-variant)", fontFamily: "var(--font-body)" }}>
-            {plan.desc}
-          </p>
+          <div className="flex items-center gap-2 mb-0.5">
+            <span
+              className="px-2.5 py-1 rounded-full text-xs font-bold"
+              style={{ backgroundColor: plan.badge.bg, color: plan.badge.text }}
+            >
+              {plan.label}
+            </span>
+          </div>
+          <p className="text-sm" style={{ color: "#6B5B53" }}>{plan.desc}</p>
         </div>
         <button
-          className="px-5 py-2.5 rounded-full font-bold text-sm transition-all active:scale-95"
-          style={{
-            background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))",
-            color: "white",
-            fontFamily: "var(--font-label)",
-          }}
+          className="flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90"
+          style={{ backgroundColor: "var(--color-primary)" }}
         >
           Changer de plan
         </button>
-      </section>
+      </div>
 
-      {/* Profil */}
-      <section
-        className="rounded-3xl overflow-hidden"
-        style={{ backgroundColor: "var(--color-surface-container-lowest)", boxShadow: "0 4px 20px rgba(90,65,56,0.04)" }}
-      >
-        <div className="px-8 py-6" style={{ borderBottom: "1px solid rgba(227,191,178,0.15)" }}>
-          <h2 className="text-xl font-bold" style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}>
+      {/* ── Profil ── */}
+      <div className="bg-white rounded-2xl border border-[#EDE8E5] overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#EDE8E5]">
+          <h2 className="text-sm font-black text-[#1C1B1B]" style={{ fontFamily: "var(--font-headline)" }}>
             Profil du restaurant
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6">
+        <form onSubmit={handleSubmit} className="px-5 py-5 space-y-5">
 
           {/* Logo */}
-          <div className="flex items-center gap-6">
-            <div className="relative">
-              <div
-                className="w-20 h-20 rounded-2xl overflow-hidden flex items-center justify-center"
-                style={{ backgroundColor: "var(--color-surface-container-low)" }}
-              >
-                {logoPreview ? (
-                  <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+          <div className="flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-[#EDE8E5] bg-[#F6F4F2] flex items-center justify-center">
+                {preview ? (
+                  <img src={preview} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="material-symbols-outlined text-3xl opacity-30" style={{ color: "var(--color-on-surface-variant)" }}>
-                    restaurant
-                  </span>
+                  <span className="material-symbols-outlined text-[#C0B4AE]" style={{ fontSize: 24 }}>restaurant</span>
                 )}
               </div>
               {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/30">
-                  <span className="material-symbols-outlined text-white animate-spin">progress_activity</span>
+                <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/30">
+                  <span className="material-symbols-outlined text-white animate-spin" style={{ fontSize: 20 }}>progress_activity</span>
                 </div>
               )}
             </div>
@@ -149,101 +112,69 @@ export default function SettingsForm({ restaurant }: SettingsFormProps) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="px-4 py-2 rounded-full text-sm font-bold transition-all active:scale-95 disabled:opacity-50"
-                style={{
-                  backgroundColor: "var(--color-surface-container-low)",
-                  color: "var(--color-on-surface)",
-                  fontFamily: "var(--font-label)",
-                }}
+                className="px-4 py-2 rounded-full text-sm font-bold border border-[#EDE8E5] text-[#1C1B1B] hover:bg-[#FAFAF9] transition-colors disabled:opacity-50"
               >
-                {uploading ? "Envoi en cours..." : "Changer le logo"}
+                {uploading ? "Envoi en cours…" : "Changer le logo"}
               </button>
-              <p className="text-xs mt-1" style={{ color: "var(--color-on-surface-variant)" }}>
-                PNG, JPG — max 2 MB
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={handleLogoChange}
-              />
+              <p className="text-xs mt-1.5" style={{ color: "#A09088" }}>PNG, JPG — max 2 MB</p>
+              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleLogoChange} />
             </div>
           </div>
 
-          {/* Nom */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Nom du restaurant *
-            </label>
-            <input
+          {/* Fields */}
+          <Field label="Nom du restaurant *">
+            <Input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={inputBase}
-              onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+              placeholder="Ex : Le Petit Bistro"
+              icon="storefront"
             />
-          </div>
+          </Field>
 
-          {/* Adresse */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Adresse
-            </label>
-            <input
+          <Field label="Adresse">
+            <Input
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Ex : 12 Avenue Cheikh Anta Diop, Dakar"
-              style={inputBase}
-              onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+              icon="location_on"
             />
-          </div>
+          </Field>
 
-          {/* Téléphone */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Téléphone
-            </label>
-            <input
+          <Field label="Téléphone">
+            <Input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Ex : +221 77 000 00 00"
-              style={inputBase}
-              onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+              icon="phone"
             />
-          </div>
+          </Field>
 
-          {/* Slug (lecture seule) */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Lien du menu public
-            </label>
+          {/* Slug — read only */}
+          <Field label="Lien du menu public">
             <div
-              className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm"
-              style={{ backgroundColor: "var(--color-surface-container)", fontFamily: "var(--font-body)", color: "var(--color-on-surface-variant)" }}
+              className="flex items-center gap-2.5 rounded-xl px-3.5 py-3 border border-[#EDE8E5]"
+              style={{ backgroundColor: "#F6F4F2" }}
             >
-              <span className="material-symbols-outlined text-sm">link</span>
-              <span className="truncate">/menu/{restaurant.slug}</span>
+              <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 18, color: "#A09088" }}>link</span>
+              <span className="text-sm truncate" style={{ color: "#6B5B53" }}>/menu/{restaurant.slug}</span>
             </div>
-          </div>
+          </Field>
 
           {/* Feedback */}
           {feedback && (
             <div
-              className="px-4 py-3 rounded-2xl text-sm flex items-center gap-2"
-              style={{
-                backgroundColor: feedback.type === "success" ? "#dcfce7" : "#ffdad6",
-                color: feedback.type === "success" ? "#15803d" : "#93000a",
-                fontFamily: "var(--font-body)",
-              }}
+              className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
+              style={
+                feedback.type === "success"
+                  ? { backgroundColor: "#F0FDF4", color: "#15803D", border: "1px solid #BBF7D0" }
+                  : { backgroundColor: "#FFF0EE", color: "#93000A", border: "1px solid #FFDAD6" }
+              }
             >
-              <span className="material-symbols-outlined text-sm">
+              <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 17, marginTop: 1 }}>
                 {feedback.type === "success" ? "check_circle" : "error_outline"}
               </span>
               {feedback.msg}
@@ -253,41 +184,73 @@ export default function SettingsForm({ restaurant }: SettingsFormProps) {
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-4 rounded-full font-bold text-white transition-all active:scale-95 disabled:opacity-60"
-            style={{
-              background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))",
-              fontFamily: "var(--font-label)",
-              fontSize: "0.9375rem",
-            }}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-55 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "var(--color-primary)" }}
           >
             {saving ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
-                Enregistrement...
-              </span>
+              <>
+                <span className="material-symbols-outlined animate-spin" style={{ fontSize: 18 }}>progress_activity</span>
+                Enregistrement…
+              </>
             ) : "Enregistrer les modifications"}
           </button>
         </form>
-      </section>
+      </div>
 
-      {/* Danger zone */}
-      <section
-        className="rounded-3xl p-6"
-        style={{ backgroundColor: "#fff8f6", border: "1px solid rgba(186,26,26,0.1)" }}
-      >
-        <h3 className="font-bold mb-1" style={{ fontFamily: "var(--font-headline)", color: "#ba1a1a" }}>
-          Zone de danger
-        </h3>
-        <p className="text-sm mb-4" style={{ color: "var(--color-on-surface-variant)", fontFamily: "var(--font-body)" }}>
-          Supprimer votre compte supprime définitivement toutes vos données.
-        </p>
-        <button
-          className="px-5 py-2.5 rounded-full text-sm font-bold transition-all active:scale-95"
-          style={{ backgroundColor: "#ffdad6", color: "#ba1a1a", fontFamily: "var(--font-label)" }}
-        >
-          Supprimer mon compte
-        </button>
-      </section>
+      {/* ── Danger zone ── */}
+      <div className="bg-white rounded-2xl border border-red-100 overflow-hidden">
+        <div className="px-5 py-4 border-b border-red-100">
+          <h3 className="text-sm font-black" style={{ color: "#BA1A1A", fontFamily: "var(--font-headline)" }}>
+            Zone de danger
+          </h3>
+        </div>
+        <div className="px-5 py-4 flex items-center justify-between gap-4">
+          <p className="text-sm" style={{ color: "#6B5B53" }}>
+            Supprimer votre compte supprime définitivement toutes vos données.
+          </p>
+          <button
+            className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors hover:bg-red-100"
+            style={{ backgroundColor: "#FFF0EE", color: "#BA1A1A" }}
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Helpers ── */
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold mb-1.5 text-[#1C1B1B]">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Input({ icon, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { icon: string }) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div
+      className="flex items-center gap-2.5 rounded-xl px-3.5 py-3 transition-colors"
+      style={{
+        border: `1.5px solid ${focused ? "var(--color-primary)" : "#E0D9D5"}`,
+        backgroundColor: focused ? "#FFFBF9" : "#FAFAF9",
+      }}
+    >
+      <span className="material-symbols-outlined flex-shrink-0" style={{ fontSize: 18, color: focused ? "var(--color-primary)" : "#A09088" }}>
+        {icon}
+      </span>
+      <input
+        {...props}
+        onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
+        onBlur={(e)  => { setFocused(false); props.onBlur?.(e); }}
+        className="flex-1 bg-transparent text-sm outline-none placeholder:text-[#C0B4AE] min-w-0"
+        style={{ color: "#1C1B1B", fontFamily: "var(--font-body)" }}
+      />
     </div>
   );
 }

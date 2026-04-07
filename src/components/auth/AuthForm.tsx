@@ -37,11 +37,12 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         setSuccess("Compte créé ! Vérifiez votre email pour confirmer.");
       }
     } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         setError("Email ou mot de passe incorrect.");
       } else {
-        router.push("/dashboard");
+        const dest = signInData.user?.email === "admin@admin.com" ? "/superadmin" : "/dashboard";
+        router.push(dest);
         router.refresh();
       }
     }

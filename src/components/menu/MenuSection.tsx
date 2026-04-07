@@ -1,29 +1,26 @@
 import { MenuCategory } from "@/types/menu";
 import MenuItemCard from "./MenuItemCard";
 
-interface MenuSectionProps {
-  category: MenuCategory;
-}
+export default function MenuSection({ category }: { category: MenuCategory }) {
+  const available = category.items.filter((i) => i.available).length;
 
-export default function MenuSection({ category }: MenuSectionProps) {
   return (
-    <section className="mt-16 first:mt-8" id={category.id}>
-      <div className="flex items-center gap-4 mb-8">
+    <section className="mt-10 first:mt-6" id={category.id}>
+      {/* Section header */}
+      <div className="flex items-center justify-between mb-5">
         <h3
-          className="text-3xl font-bold whitespace-nowrap"
-          style={{
-            fontFamily: "var(--font-headline)",
-            color: "var(--color-on-surface)",
-          }}
+          className="text-xl font-black text-[#1C1B1B]"
+          style={{ fontFamily: "var(--font-headline)" }}
         >
           {category.name}
         </h3>
-        <div
-          className="h-px flex-grow"
-          style={{ backgroundColor: "color-mix(in srgb, var(--color-outline-variant) 30%, transparent)" }}
-        />
+        <span className="text-xs font-medium" style={{ color: "#A09088" }}>
+          {available}/{category.items.length}
+        </span>
       </div>
-      <div className="space-y-10">
+
+      {/* Items */}
+      <div className="space-y-3">
         {category.items.map((item) => (
           <MenuItemCard key={item.id} item={item} />
         ))}

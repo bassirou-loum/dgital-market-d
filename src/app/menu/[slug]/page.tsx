@@ -75,7 +75,7 @@ export default async function MenuPage({
     >
       <MenuHeader restaurant={restaurant} />
 
-      <main className="pt-24 px-6 max-w-screen-sm mx-auto">
+      <main className="pt-32 px-5 pb-10 max-w-lg mx-auto">
         {restaurant.dailySpecial && (
           <DailySpecial special={restaurant.dailySpecial} />
         )}

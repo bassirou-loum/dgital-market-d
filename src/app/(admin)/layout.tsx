@@ -1,46 +1,44 @@
+import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import { getMyRestaurant } from "@/lib/dal/restaurant";
+
+const MOBILE_NAV = [
+  { icon: "grid_view",       label: "Accueil", href: "/dashboard" },
+  { icon: "restaurant_menu", label: "Menu",    href: "/menu-editor" },
+  { icon: "qr_code_2",       label: "QR Code", href: "/qr" },
+  { icon: "settings",        label: "Réglages", href: "/settings" },
+];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const restaurant = await getMyRestaurant();
 
   return (
-    <div style={{ backgroundColor: "var(--color-background)", minHeight: "100dvh" }}>
+    <div className="min-h-dvh" style={{ backgroundColor: "#F6F4F2", fontFamily: "var(--font-body)" }}>
       <AdminTopBar />
       <AdminSidebar restaurantName={restaurant.name} restaurantSlug={restaurant.slug} />
-      <main className="pt-20 pb-20 md:pb-8 px-4 md:pl-72 md:pr-8 max-w-screen-2xl mx-auto">
-        {children}
+
+      {/* Main content */}
+      <main className="pt-16 pb-24 md:pb-8 md:pl-60">
+        <div className="px-5 md:px-8 py-8 max-w-5xl mx-auto">
+          {children}
+        </div>
       </main>
 
       {/* Mobile bottom nav */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pt-3 pb-8 z-50 rounded-t-3xl"
-        style={{
-          backgroundColor: "rgba(255,255,255,0.9)",
-          backdropFilter: "blur(24px)",
-          boxShadow: "0 -10px 40px rgba(90,65,56,0.08)",
-        }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 pt-2 pb-6"
+        style={{ backgroundColor: "#fff", borderTop: "1px solid #EDE8E5" }}
       >
-        {[
-          { icon: "dashboard", label: "Accueil", href: "/dashboard" },
-          { icon: "restaurant_menu", label: "Menu", href: "/menu-editor" },
-          { icon: "qr_code_2", label: "QR Code", href: "/qr" },
-          { icon: "person", label: "Profil", href: "#" },
-        ].map((item) => (
-          <a
-            key={item.label}
+        {MOBILE_NAV.map((item) => (
+          <Link
+            key={item.href}
             href={item.href}
-            className="flex flex-col items-center justify-center text-stone-400 transition-transform active:scale-90"
+            className="flex flex-col items-center gap-1 px-4 py-1 rounded-xl text-[#A09088] transition-colors active:scale-95"
           >
-            <span className="material-symbols-outlined mb-1">{item.icon}</span>
-            <span
-              className="text-[10px] uppercase tracking-widest font-bold"
-              style={{ fontFamily: "var(--font-label)" }}
-            >
-              {item.label}
-            </span>
-          </a>
+            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{item.icon}</span>
+            <span className="text-[10px] font-bold">{item.label}</span>
+          </Link>
         ))}
       </nav>
     </div>
