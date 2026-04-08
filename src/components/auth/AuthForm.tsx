@@ -34,7 +34,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       if (signUpError) {
         setError(signUpError.message);
       } else {
-        setSuccess("Compte créé ! Vérifiez votre email pour confirmer.");
+        router.push("/en-attente");
       }
     } else {
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });

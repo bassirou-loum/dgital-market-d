@@ -15,9 +15,10 @@ async function assertSuperAdmin() {
 export type SubscriptionDuration =
   | "trial_7d"
   | "1m" | "2m" | "3m" | "6m" | "12m"
+  | "forever"
   | "none";
 
-function computeDates(duration: SubscriptionDuration): {
+function computeDates(plan: "gratuit" | "standard" | "premium", duration: SubscriptionDuration): {
   subscription_status: string;
   subscription_start: string | null;
   subscription_end: string | null;
@@ -26,6 +27,15 @@ function computeDates(duration: SubscriptionDuration): {
 
   if (duration === "none") {
     return { subscription_status: "none", subscription_start: null, subscription_end: null };
+  }
+
+  // Plan gratuit = actif sans date de fin
+  if (plan === "gratuit" || duration === "forever") {
+    return {
+      subscription_status: "active",
+      subscription_start: now.toISOString(),
+      subscription_end: null,
+    };
   }
 
   const end = new Date(now);
@@ -56,7 +66,7 @@ export async function updateRestaurantSubscription(
 ) {
   try {
     const supabase = await assertSuperAdmin();
-    const dates = computeDates(duration);
+    const dates = computeDates(plan, duration);
 
     const { error } = await supabase
       .from("restaurants")

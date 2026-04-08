@@ -18,8 +18,9 @@ const PLAN_COLORS: Record<string, { bg: string; text: string }> = {
   premium:  { bg: "#FFF7ED", text: "#C2410C" },
 };
 
-const DURATION_OPTIONS: { value: SubscriptionDuration; label: string }[] = [
-  { value: "none",     label: "Sans abonnement" },
+const DURATION_OPTIONS: { value: SubscriptionDuration; label: string; plansOnly?: string[] }[] = [
+  { value: "none",     label: "Désactiver" },
+  { value: "forever",  label: "Illimité", plansOnly: ["gratuit"] },
   { value: "trial_7d", label: "Essai 7 jours" },
   { value: "1m",       label: "1 mois" },
   { value: "2m",       label: "2 mois" },
@@ -66,7 +67,16 @@ function RestaurantRow({
   statusMeta: StatusMeta;
 }) {
   const [plan, setPlan] = useState<"gratuit" | "standard" | "premium">(restaurant.plan);
-  const [duration, setDuration] = useState<SubscriptionDuration>("none");
+  const [duration, setDuration] = useState<SubscriptionDuration>(
+    restaurant.plan === "gratuit" ? "forever" : "none"
+  );
+
+  function handlePlanChange(newPlan: "gratuit" | "standard" | "premium") {
+    setPlan(newPlan);
+    // Pour gratuit → illimité par défaut, pour les autres → essai 7j par défaut
+    if (newPlan === "gratuit") setDuration("forever");
+    else if (duration === "forever") setDuration("trial_7d");
+  }
   const [expanded, setExpanded] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -139,7 +149,7 @@ function RestaurantRow({
                 <div className="relative">
                   <select
                     value={plan}
-                    onChange={(e) => setPlan(e.target.value as typeof plan)}
+                    onChange={(e) => handlePlanChange(e.target.value as typeof plan)}
                     className="w-full appearance-none bg-white border border-[#EDE8E5] rounded-xl px-3 py-2.5 text-sm font-medium text-[#1C1B1B] pr-8 focus:outline-none focus:ring-2 focus:ring-[#C64F00]/20 focus:border-[#C64F00]"
                   >
                     <option value="gratuit">Gratuit</option>
@@ -166,9 +176,11 @@ function RestaurantRow({
                     onChange={(e) => setDuration(e.target.value as SubscriptionDuration)}
                     className="w-full appearance-none bg-white border border-[#EDE8E5] rounded-xl px-3 py-2.5 text-sm font-medium text-[#1C1B1B] pr-8 focus:outline-none focus:ring-2 focus:ring-[#C64F00]/20 focus:border-[#C64F00]"
                   >
-                    {DURATION_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
+                    {DURATION_OPTIONS
+                      .filter((opt) => !opt.plansOnly || opt.plansOnly.includes(plan))
+                      .map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
                   </select>
                   <span
                     className="material-symbols-outlined pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#A09088]"

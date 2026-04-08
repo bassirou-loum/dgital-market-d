@@ -37,8 +37,8 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // Routes protégées (admin)
-  const adminRoutes = ["/dashboard", "/menu-editor", "/qr", "/settings"];
+  // Routes protégées (admin) — /en-attente est accessible sans abonnement actif
+  const adminRoutes = ["/dashboard", "/menu-editor", "/qr", "/settings", "/en-attente"];
   const isAdminRoute = adminRoutes.some((r) => pathname.startsWith(r));
   // /reset-password nécessite d'être connecté (session via lien email)
   const needsSession = pathname === "/reset-password";

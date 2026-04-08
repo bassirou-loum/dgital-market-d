@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import { getMyRestaurant } from "@/lib/dal/restaurant";
@@ -12,6 +13,16 @@ const MOBILE_NAV = [
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const restaurant = await getMyRestaurant();
+
+  // Calculer le statut réel (la DB peut encore avoir "active" alors que la date est dépassée)
+  const realStatus = (() => {
+    const s = restaurant.subscription_status;
+    if (s === "none") return "none";
+    if (restaurant.subscription_end && new Date(restaurant.subscription_end) < new Date()) return "expired";
+    return s;
+  })();
+
+  if (realStatus === "none" || realStatus === "expired") redirect("/en-attente");
 
   return (
     <div className="min-h-dvh" style={{ backgroundColor: "#F6F4F2", fontFamily: "var(--font-body)" }}>
