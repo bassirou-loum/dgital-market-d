@@ -143,10 +143,11 @@ export async function getDashboardStats(restaurantId: string) {
     }));
   }
 
-  // Derniers plats modifiés
+  // Derniers plats modifiés — filtrés par restaurant
   const { data: recentItems } = await supabase
     .from("items")
-    .select("id, name, available, updated_at, categories(name)")
+    .select("id, name, available, updated_at, categories!inner(name, menus!inner(restaurant_id))")
+    .eq("categories.menus.restaurant_id", restaurantId)
     .order("updated_at", { ascending: false })
     .limit(5);
 

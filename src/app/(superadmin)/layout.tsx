@@ -73,12 +73,7 @@ export default async function SuperAdminLayout({ children }: { children: React.R
 
 /* Bouton déconnexion client */
 function SuperAdminLogoutButton({ small }: { small?: boolean }) {
-  // Rendu serveur — on utilise un form action
-  return (
-    <form action="/api/auth/signout" method="post">
-      <LogoutBtn small={small} />
-    </form>
-  );
+  return <LogoutBtn small={small} />;
 }
 
 // On délègue au client pour le router.push
