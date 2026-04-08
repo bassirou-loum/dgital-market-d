@@ -4,11 +4,16 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import { getMyRestaurant, isTeamMember } from "@/lib/dal/restaurant";
 
-const MOBILE_NAV = [
+const MOBILE_NAV_OWNER = [
   { icon: "grid_view",       label: "Accueil", href: "/dashboard" },
   { icon: "restaurant_menu", label: "Menu",    href: "/menu-editor" },
   { icon: "qr_code_2",       label: "QR Code", href: "/qr" },
   { icon: "settings",        label: "Réglages", href: "/settings" },
+];
+
+const MOBILE_NAV_EMPLOYEE = [
+  { icon: "restaurant_menu", label: "Menu",    href: "/menu-editor" },
+  { icon: "qr_code_2",       label: "QR Code", href: "/qr" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -29,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-dvh" style={{ backgroundColor: "#F6F4F2", fontFamily: "var(--font-body)" }}>
       <AdminTopBar />
-      <AdminSidebar restaurantName={restaurant.name} restaurantSlug={restaurant.slug} />
+      <AdminSidebar restaurantName={restaurant.name} restaurantSlug={restaurant.slug} isEmployee={teamMember} />
 
       {/* Main content */}
       <main className="pt-16 pb-24 md:pb-8 md:pl-60">
@@ -43,7 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 pt-2 pb-6"
         style={{ backgroundColor: "#fff", borderTop: "1px solid #EDE8E5" }}
       >
-        {MOBILE_NAV.map((item) => (
+        {(teamMember ? MOBILE_NAV_EMPLOYEE : MOBILE_NAV_OWNER).map((item) => (
           <Link
             key={item.href}
             href={item.href}

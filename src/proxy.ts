@@ -49,7 +49,8 @@ export async function proxy(request: NextRequest) {
 
   // Employés : is_employee dans les metadata → accès /menu-editor uniquement
   const isEmployee = user?.user_metadata?.is_employee === true;
-  if (isEmployee && isAdminRoute && !pathname.startsWith("/menu-editor")) {
+  const employeeAllowed = ["/menu-editor", "/qr"];
+  if (isEmployee && isAdminRoute && !employeeAllowed.some((r) => pathname.startsWith(r))) {
     return NextResponse.redirect(new URL("/menu-editor", request.url));
   }
 

@@ -5,18 +5,20 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const NAV = [
-  { href: "/dashboard",   icon: "grid_view",        label: "Vue d'ensemble" },
-  { href: "/menu-editor", icon: "restaurant_menu",   label: "Éditeur de menu" },
-  { href: "/qr",          icon: "qr_code_2",         label: "QR Code" },
-  { href: "/settings",    icon: "settings",          label: "Paramètres" },
+  { href: "/dashboard",   icon: "grid_view",        label: "Vue d'ensemble", employeeOnly: false },
+  { href: "/menu-editor", icon: "restaurant_menu",   label: "Éditeur de menu", employeeOnly: true },
+  { href: "/qr",          icon: "qr_code_2",         label: "QR Code", employeeOnly: true },
+  { href: "/settings",    icon: "settings",          label: "Paramètres", employeeOnly: false },
 ];
 
 export default function AdminSidebar({
   restaurantName,
   restaurantSlug,
+  isEmployee = false,
 }: {
   restaurantName: string;
   restaurantSlug: string;
+  isEmployee?: boolean;
 }) {
   const pathname = usePathname();
   const router   = useRouter();
@@ -59,7 +61,7 @@ export default function AdminSidebar({
         <p className="text-[10px] font-bold uppercase tracking-widest px-3 pb-2 pt-1" style={{ color: "#A09088" }}>
           Navigation
         </p>
-        {NAV.map((item) => {
+        {NAV.filter((item) => !isEmployee || item.employeeOnly).map((item) => {
           const active = pathname === item.href;
           return (
             <Link
