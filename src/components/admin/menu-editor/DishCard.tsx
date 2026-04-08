@@ -2,8 +2,34 @@
 
 import { MenuItem } from "@/types/menu";
 
+
 function fmt(price: number) {
   return `${price.toLocaleString("fr-FR")} FCFA`;
+}
+
+function PriceDisplay({ item }: { item: MenuItem }) {
+  if (item.variants && item.variants.length > 0) {
+    const min = Math.min(...item.variants.map((v) => v.price));
+    return (
+      <div>
+        <span className="text-xs font-medium" style={{ color: "#A09088" }}>À partir de </span>
+        <span className="text-sm font-black" style={{ color: "var(--color-primary)", fontFamily: "var(--font-headline)" }}>
+          {fmt(min)}
+        </span>
+        <span
+          className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          style={{ backgroundColor: "#FFF0E8", color: "var(--color-primary)" }}
+        >
+          {item.variants.length} variantes
+        </span>
+      </div>
+    );
+  }
+  return (
+    <span className="text-sm font-black" style={{ color: "var(--color-primary)", fontFamily: "var(--font-headline)" }}>
+      {fmt(item.price)}
+    </span>
+  );
 }
 
 export default function DishCard({
@@ -38,7 +64,9 @@ export default function DishCard({
           {/* Price badge */}
           <div className="absolute top-3 right-3 bg-white rounded-full px-2.5 py-1 border border-[#EDE8E5]">
             <span className="text-xs font-black" style={{ color: "var(--color-primary)", fontFamily: "var(--font-headline)" }}>
-              {fmt(item.price)}
+              {item.variants && item.variants.length > 0
+                ? `dès ${fmt(Math.min(...item.variants.map((v) => v.price)))}`
+                : fmt(item.price)}
             </span>
           </div>
           {/* Chef badge */}
@@ -101,9 +129,9 @@ export default function DishCard({
 
         {/* Price (no image) */}
         {!item.image && (
-          <p className="text-sm font-black mb-3" style={{ color: "var(--color-primary)", fontFamily: "var(--font-headline)" }}>
-            {fmt(item.price)}
-          </p>
+          <div className="mb-3">
+            <PriceDisplay item={item} />
+          </div>
         )}
 
         {/* Footer */}

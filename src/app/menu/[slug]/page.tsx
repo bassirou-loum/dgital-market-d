@@ -48,6 +48,7 @@ export default async function MenuPage({
       image: item.image_url ?? undefined,
       available: item.available,
       badges: (item.badges ?? []) as Badge[],
+      variants: item.variants ?? [],
     })),
   }));
 

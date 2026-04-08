@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MenuItem, Badge } from "@/types/menu";
+import { MenuItem, Badge, ItemVariant } from "@/types/menu";
 
 interface DishModalProps {
   item?: MenuItem | null;
@@ -12,22 +12,49 @@ interface DishModalProps {
 
 const ALL_BADGES: Badge[] = ["V", "VG", "GF", "SPICY", "NEW", "CHEF"];
 const BADGE_LABELS: Record<Badge, string> = {
-  V: "Végétarien (V)",
-  VG: "Vegan (VG)",
-  GF: "Sans gluten (GF)",
+  V: "Végétarien",
+  VG: "Vegan",
+  GF: "Sans gluten",
   SPICY: "Épicé",
   NEW: "Nouveau",
   CHEF: "Choix du chef",
 };
 
+const INPUT_STYLE = {
+  backgroundColor: "var(--color-surface-container-low)",
+  color: "var(--color-on-surface)",
+  fontFamily: "var(--font-body)",
+  border: "2px solid transparent",
+};
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label
+        className="block text-xs font-bold uppercase tracking-widest mb-2"
+        style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}
+      >
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
 export default function DishModal({ item, categoryName, onSave, onClose }: DishModalProps) {
   const isEdit = !!item;
-  const [name, setName] = useState(item?.name ?? "");
+  const [name, setName]               = useState(item?.name ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
-  const [price, setPrice] = useState(item ? String(item.price) : "");
-  const [image, setImage] = useState(item?.image ?? "");
-  const [available, setAvailable] = useState(item?.available ?? true);
-  const [badges, setBadges] = useState<Badge[]>(item?.badges ?? []);
+  const [price, setPrice]             = useState(item ? String(item.price) : "");
+  const [image, setImage]             = useState(item?.image ?? "");
+  const [available, setAvailable]     = useState(item?.available ?? true);
+  const [badges, setBadges]           = useState<Badge[]>(item?.badges ?? []);
+
+  // Variants
+  const [useVariants, setUseVariants] = useState((item?.variants?.length ?? 0) > 0);
+  const [variants, setVariants]       = useState<Omit<ItemVariant, "id">[]>(
+    item?.variants?.map((v) => ({ name: v.name, price: v.price, position: v.position })) ?? []
+  );
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -39,176 +66,229 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
     setBadges((prev) => prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]);
   }
 
+  function addVariant() {
+    setVariants((prev) => [...prev, { name: "", price: 0, position: prev.length }]);
+  }
+
+  function removeVariant(idx: number) {
+    setVariants((prev) => prev.filter((_, i) => i !== idx).map((v, i) => ({ ...v, position: i })));
+  }
+
+  function updateVariant(idx: number, field: "name" | "price", value: string) {
+    setVariants((prev) =>
+      prev.map((v, i) => i === idx ? { ...v, [field]: field === "price" ? Number(value) : value } : v)
+    );
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !price) return;
+    if (!name.trim()) return;
+
+    const minPrice = useVariants && variants.length > 0
+      ? Math.min(...variants.map((v) => v.price))
+      : Number(price);
+
+    if (!useVariants && !price) return;
+    if (useVariants && variants.length === 0) return;
+
     onSave({
       id: item?.id,
       name: name.trim(),
       description: description.trim(),
-      price: Number(price),
+      price: minPrice,
       currency: "FCFA",
       image: image.trim() || undefined,
       available,
       badges: badges.length > 0 ? badges : undefined,
+      variants: useVariants ? variants : [],
     });
   }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(28,27,27,0.5)", backdropFilter: "blur(4px)" }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      style={{ backgroundColor: "rgba(28,27,27,0.6)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
         style={{ backgroundColor: "var(--color-surface-container-lowest)" }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-8 py-6"
+          className="flex items-center justify-between px-6 py-5"
           style={{ borderBottom: "1px solid rgba(227,191,178,0.15)" }}
         >
           <div>
             <h2
-              className="text-2xl font-bold"
+              className="text-xl font-bold"
               style={{ fontFamily: "var(--font-headline)", color: "var(--color-on-surface)" }}
             >
               {isEdit ? "Modifier le plat" : "Nouveau plat"}
             </h2>
-            <p
-              className="text-sm mt-1"
-              style={{ fontFamily: "var(--font-body)", color: "var(--color-on-surface-variant)" }}
-            >
+            <p className="text-xs mt-0.5" style={{ color: "var(--color-on-surface-variant)" }}>
               Catégorie : {categoryName}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl transition-colors"
-            style={{ color: "var(--color-on-surface-variant)" }}
-          >
+          <button onClick={onClose} className="p-2 rounded-xl" style={{ color: "var(--color-on-surface-variant)" }}>
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[72vh] overflow-y-auto">
+
           {/* Name */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Nom du plat *
-            </label>
+          <Field label="Nom du plat *">
             <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex : Steak Frites"
+              type="text" required value={name} onChange={(e) => setName(e.target.value)}
+              placeholder="Ex : Burger Dakar"
               className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition-all"
-              style={{
-                backgroundColor: "var(--color-surface-container-low)",
-                color: "var(--color-on-surface)",
-                fontFamily: "var(--font-body)",
-                border: "2px solid transparent",
-              }}
+              style={INPUT_STYLE}
               onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
               onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
             />
-          </div>
+          </Field>
 
           {/* Description */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Description
-            </label>
+          <Field label="Description">
             <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              placeholder="Décrivez le plat..."
+              value={description} onChange={(e) => setDescription(e.target.value)}
+              rows={2} placeholder="Décrivez le plat..."
               className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition-all resize-none"
-              style={{
-                backgroundColor: "var(--color-surface-container-low)",
-                color: "var(--color-on-surface)",
-                fontFamily: "var(--font-body)",
-                border: "2px solid transparent",
-              }}
+              style={INPUT_STYLE}
               onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
               onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
             />
+          </Field>
+
+          {/* Prix / Variantes toggle */}
+          <div
+            className="flex items-center justify-between p-4 rounded-2xl"
+            style={{ backgroundColor: "var(--color-surface-container-low)" }}
+          >
+            <div>
+              <p className="font-bold text-sm" style={{ color: "var(--color-on-surface)" }}>
+                Plusieurs tailles / prix
+              </p>
+              <p className="text-xs" style={{ color: "var(--color-on-surface-variant)" }}>
+                {useVariants ? "Activer les variantes" : "Prix unique"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setUseVariants((v) => !v); }}
+              className="w-11 h-6 rounded-full relative transition-colors"
+              style={{ backgroundColor: useVariants ? "var(--color-primary)" : "#d4d0cf" }}
+            >
+              <div
+                className="absolute top-[2px] w-5 h-5 bg-white rounded-full transition-all shadow-sm"
+                style={{ left: useVariants ? "calc(100% - 22px)" : "2px" }}
+              />
+            </button>
           </div>
 
-          {/* Price */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Prix (FCFA) *
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                required
-                min={0}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="5000"
-                className="w-full pl-4 pr-16 py-3 rounded-2xl text-sm outline-none transition-all"
-                style={{
-                  backgroundColor: "var(--color-surface-container-low)",
-                  color: "var(--color-on-surface)",
-                  fontFamily: "var(--font-body)",
-                  border: "2px solid transparent",
-                }}
-                onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-                onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
-              />
-              <span
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold"
-                style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}
-              >
-                FCFA
-              </span>
+          {/* Prix unique */}
+          {!useVariants && (
+            <Field label="Prix (FCFA) *">
+              <div className="relative">
+                <input
+                  type="number" required min={0} value={price} onChange={(e) => setPrice(e.target.value)}
+                  placeholder="2500"
+                  className="w-full pl-4 pr-16 py-3 rounded-2xl text-sm outline-none transition-all"
+                  style={INPUT_STYLE}
+                  onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
+                  onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold" style={{ color: "var(--color-on-surface-variant)" }}>
+                  FCFA
+                </span>
+              </div>
+            </Field>
+          )}
+
+          {/* Variantes */}
+          {useVariants && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold uppercase tracking-widest" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
+                  Variantes *
+                </label>
+                <button
+                  type="button" onClick={addVariant}
+                  className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full"
+                  style={{ backgroundColor: "#FFF0E8", color: "var(--color-primary)" }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add</span>
+                  Ajouter
+                </button>
+              </div>
+
+              {variants.length === 0 && (
+                <p className="text-xs text-center py-4 rounded-2xl" style={{ backgroundColor: "var(--color-surface-container-low)", color: "var(--color-on-surface-variant)" }}>
+                  Aucune variante — cliquez "Ajouter"
+                </p>
+              )}
+
+              <div className="space-y-2">
+                {variants.map((v, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="text" value={v.name} onChange={(e) => updateVariant(idx, "name", e.target.value)}
+                      placeholder={`Variante ${idx + 1} (ex: Petit)`}
+                      className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none transition-all"
+                      style={INPUT_STYLE}
+                      onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
+                      onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+                    />
+                    <div className="relative w-32 flex-shrink-0">
+                      <input
+                        type="number" min={0} value={v.price || ""} onChange={(e) => updateVariant(idx, "price", e.target.value)}
+                        placeholder="Prix"
+                        className="w-full pl-3 pr-10 py-2.5 rounded-xl text-sm outline-none transition-all"
+                        style={INPUT_STYLE}
+                        onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
+                        onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold" style={{ color: "var(--color-on-surface-variant)" }}>
+                        FCFA
+                      </span>
+                    </div>
+                    <button
+                      type="button" onClick={() => removeVariant(idx)}
+                      className="p-2 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
+                      style={{ color: "#A09088" }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>delete_outline</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Image URL */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              URL de l&apos;image
-            </label>
+          <Field label="URL de l'image">
             <input
-              type="url"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
+              type="url" value={image} onChange={(e) => setImage(e.target.value)}
               placeholder="https://..."
               className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition-all"
-              style={{
-                backgroundColor: "var(--color-surface-container-low)",
-                color: "var(--color-on-surface)",
-                fontFamily: "var(--font-body)",
-                border: "2px solid transparent",
-              }}
+              style={INPUT_STYLE}
               onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
               onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
             />
-          </div>
+          </Field>
 
           {/* Badges */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ fontFamily: "var(--font-label)", color: "var(--color-on-surface-variant)" }}>
-              Badges
-            </label>
+          <Field label="Badges">
             <div className="flex flex-wrap gap-2">
               {ALL_BADGES.map((b) => {
                 const selected = badges.includes(b);
                 return (
                   <button
-                    key={b}
-                    type="button"
-                    onClick={() => toggleBadge(b)}
+                    key={b} type="button" onClick={() => toggleBadge(b)}
                     className="px-3 py-1.5 rounded-full text-xs font-bold transition-all"
                     style={{
-                      fontFamily: "var(--font-label)",
                       backgroundColor: selected ? "var(--color-primary)" : "var(--color-surface-container-low)",
                       color: selected ? "white" : "var(--color-on-surface-variant)",
                     }}
@@ -218,7 +298,7 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
                 );
               })}
             </div>
-          </div>
+          </Field>
 
           {/* Availability */}
           <div
@@ -226,16 +306,13 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
             style={{ backgroundColor: "var(--color-surface-container-low)" }}
           >
             <div>
-              <p className="font-bold text-sm" style={{ fontFamily: "var(--font-body)", color: "var(--color-on-surface)" }}>
-                Disponibilité
-              </p>
+              <p className="font-bold text-sm" style={{ color: "var(--color-on-surface)" }}>Disponibilité</p>
               <p className="text-xs" style={{ color: "var(--color-on-surface-variant)" }}>
-                {available ? "Le plat est visible et commandable" : "Le plat est masqué"}
+                {available ? "Visible sur le menu" : "Masqué"}
               </p>
             </div>
             <button
-              type="button"
-              onClick={() => setAvailable(!available)}
+              type="button" onClick={() => setAvailable(!available)}
               className="w-11 h-6 rounded-full relative transition-colors"
               style={{ backgroundColor: available ? "var(--color-primary)" : "#d4d0cf" }}
             >
@@ -248,29 +325,18 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
         </form>
 
         {/* Actions */}
-        <div
-          className="flex gap-3 px-8 py-5"
-          style={{ borderTop: "1px solid rgba(227,191,178,0.15)" }}
-        >
+        <div className="flex gap-3 px-6 py-5" style={{ borderTop: "1px solid rgba(227,191,178,0.15)" }}>
           <button
-            type="button"
-            onClick={onClose}
+            type="button" onClick={onClose}
             className="flex-1 py-3 rounded-full font-bold text-sm transition-all"
-            style={{
-              backgroundColor: "var(--color-surface-container-low)",
-              color: "var(--color-on-surface-variant)",
-              fontFamily: "var(--font-label)",
-            }}
+            style={{ backgroundColor: "var(--color-surface-container-low)", color: "var(--color-on-surface-variant)" }}
           >
             Annuler
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 py-3 rounded-full font-bold text-sm text-white transition-all active:scale-95 shadow-lg"
-            style={{
-              background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))",
-              fontFamily: "var(--font-label)",
-            }}
+            className="flex-1 py-3 rounded-full font-bold text-sm text-white transition-all active:scale-95"
+            style={{ background: "linear-gradient(135deg, var(--color-primary), var(--color-primary-container))" }}
           >
             {isEdit ? "Enregistrer" : "Ajouter le plat"}
           </button>

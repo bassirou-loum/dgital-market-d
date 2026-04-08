@@ -1,5 +1,12 @@
 export type Badge = "V" | "GF" | "VG" | "SPICY" | "NEW" | "CHEF";
 
+export interface ItemVariant {
+  id: string;
+  name: string;
+  price: number;
+  position: number;
+}
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -9,6 +16,7 @@ export interface MenuItem {
   image?: string;
   available: boolean;
   badges?: Badge[];
+  variants?: ItemVariant[];
 }
 
 export interface MenuCategory {

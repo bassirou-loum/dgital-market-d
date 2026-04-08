@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { Badge } from "@/types/menu";
+import type { Badge, ItemVariant } from "@/types/menu";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,6 +37,7 @@ export async function saveItem(
     image_url?: string;
     available: boolean;
     badges?: Badge[];
+    variants?: Omit<ItemVariant, "id">[];
   }
 ) {
   const { supabase } = await getAuthUser();
@@ -52,10 +53,28 @@ export async function saveItem(
     badges: data.badges ?? [],
   };
 
+  let itemId = data.id;
+
   if (data.id) {
     await supabase.from("items").update(payload).eq("id", data.id);
   } else {
-    await supabase.from("items").insert(payload);
+    const { data: inserted } = await supabase.from("items").insert(payload).select("id").single();
+    itemId = inserted?.id;
+  }
+
+  // Sync variants — delete all then re-insert
+  if (itemId) {
+    await supabase.from("dish_variants").delete().eq("dish_id", itemId);
+    if (data.variants && data.variants.length > 0) {
+      await supabase.from("dish_variants").insert(
+        data.variants.map((v, i) => ({
+          dish_id: itemId,
+          name: v.name,
+          price: v.price,
+          position: i,
+        }))
+      );
+    }
   }
 
   revalidatePath("/menu-editor");

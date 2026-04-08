@@ -65,6 +65,7 @@ export default function MenuEditorClient({
         id: data.id, name: data.name, description: data.description,
         price: data.price, currency: data.currency, image_url: data.image,
         available: data.available, badges: data.badges as Badge[],
+        variants: data.variants,
       });
     });
   }

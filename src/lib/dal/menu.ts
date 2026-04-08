@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Badge } from "@/types/menu";
+import type { Badge, ItemVariant } from "@/types/menu";
 
 export interface DbItem {
   id: string;
@@ -12,6 +12,7 @@ export interface DbItem {
   available: boolean;
   badges: Badge[];
   position: number;
+  variants: ItemVariant[];
 }
 
 export interface DbCategory {
@@ -60,11 +61,31 @@ export async function getActiveMenu(restaurantId: string): Promise<DbMenu | null
     .in("category_id", categoryIds)
     .order("position");
 
+  const itemIds = (items ?? []).map((i) => i.id);
+
+  const { data: variants } = itemIds.length
+    ? await supabase
+        .from("dish_variants")
+        .select("id, dish_id, name, price, position")
+        .in("dish_id", itemIds)
+        .order("position")
+    : { data: [] };
+
+  const variantsByItem: Record<string, ItemVariant[]> = {};
+  (variants ?? []).forEach((v) => {
+    if (!variantsByItem[v.dish_id]) variantsByItem[v.dish_id] = [];
+    variantsByItem[v.dish_id].push({ id: v.id, name: v.name, price: v.price, position: v.position });
+  });
+
   const categoriesWithItems: DbCategory[] = categories.map((cat) => ({
     ...cat,
     items: (items ?? [])
       .filter((i) => i.category_id === cat.id)
-      .map((i) => ({ ...i, badges: (i.badges ?? []) as Badge[] })),
+      .map((i) => ({
+        ...i,
+        badges: (i.badges ?? []) as Badge[],
+        variants: variantsByItem[i.id] ?? [],
+      })),
   }));
 
   return { ...menu, categories: categoriesWithItems };
