@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
-import { getMyRestaurant } from "@/lib/dal/restaurant";
+import { getMyRestaurant, isTeamMember } from "@/lib/dal/restaurant";
+import { getTeamMembers } from "@/actions/team";
 import SettingsForm from "@/components/admin/SettingsForm";
+import TeamSection from "@/components/admin/TeamSection";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = { title: "Paramètres — Digital Maître D'" };
 
 export default async function SettingsPage() {
-  const restaurant = await getMyRestaurant();
+  const [restaurant, teamMember] = await Promise.all([getMyRestaurant(), isTeamMember()]);
+
+  // Les employés n'ont pas accès aux settings
+  if (teamMember) redirect("/menu-editor");
+
+  const members = await getTeamMembers();
 
   return (
     <div className="py-8">
@@ -21,7 +29,10 @@ export default async function SettingsPage() {
         </p>
       </header>
 
-      <SettingsForm restaurant={restaurant} />
+      <div className="max-w-2xl space-y-5">
+        <SettingsForm restaurant={restaurant} />
+        <TeamSection members={members} />
+      </div>
     </div>
   );
 }

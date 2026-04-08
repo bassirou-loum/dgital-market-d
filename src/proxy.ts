@@ -47,11 +47,18 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Employés : is_employee dans les metadata → accès /menu-editor uniquement
+  const isEmployee = user?.user_metadata?.is_employee === true;
+  if (isEmployee && isAdminRoute && !pathname.startsWith("/menu-editor")) {
+    return NextResponse.redirect(new URL("/menu-editor", request.url));
+  }
+
   // Si déjà connecté, redirige depuis login/register
   const authOnlyRoutes = ["/login", "/register", "/forgot-password"];
   if (authOnlyRoutes.includes(pathname) && user) {
-    const dest = user.email === "admin@admin.com" ? "/superadmin" : "/dashboard";
-    return NextResponse.redirect(new URL(dest, request.url));
+    if (user.email === "admin@admin.com") return NextResponse.redirect(new URL("/superadmin", request.url));
+    if (isEmployee) return NextResponse.redirect(new URL("/menu-editor", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return supabaseResponse;

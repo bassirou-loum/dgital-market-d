@@ -41,8 +41,15 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       if (signInError) {
         setError("Email ou mot de passe incorrect.");
       } else {
-        const dest = signInData.user?.email === "admin@admin.com" ? "/superadmin" : "/dashboard";
-        router.push(dest);
+        const user = signInData.user;
+        if (user?.email === "admin@admin.com") {
+          router.push("/superadmin");
+        } else if (user?.user_metadata?.is_employee) {
+          // Employé → uniquement menu-editor
+          router.push("/menu-editor");
+        } else {
+          router.push("/dashboard");
+        }
         router.refresh();
       }
     }
