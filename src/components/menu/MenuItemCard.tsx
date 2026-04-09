@@ -25,16 +25,34 @@ export default function MenuItemCard({ item }: { item: MenuItem }) {
   );
 
   const displayPrice = selectedVariant ? selectedVariant.price : item.price;
+  const minPrice = hasVariants ? Math.min(...item.variants!.map((v) => v.price)) : item.price;
 
   return (
     <article
-      className="bg-white rounded-2xl border border-[#EDE8E5] overflow-hidden"
-      style={{ opacity: unavailable ? 0.6 : 1 }}
+      className="bg-white rounded-2xl border overflow-hidden transition-shadow"
+      style={{
+        borderColor: hasVariants ? "#E8D5C8" : "#EDE8E5",
+        opacity: unavailable ? 0.6 : 1,
+      }}
     >
       {/* Full-width image */}
       {item.image && (
         <div className="relative h-44 overflow-hidden">
           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+
+          {/* Variantes badge sur l'image */}
+          {hasVariants && (
+            <div
+              className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full"
+              style={{ backgroundColor: "rgba(28,27,27,0.75)", backdropFilter: "blur(4px)" }}
+            >
+              <span className="material-symbols-outlined text-white" style={{ fontSize: 13 }}>tune</span>
+              <span className="text-[11px] font-bold text-white">
+                {item.variants!.length} tailles
+              </span>
+            </div>
+          )}
+
           {item.badges?.includes("CHEF") && (
             <span
               className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
@@ -57,13 +75,25 @@ export default function MenuItemCard({ item }: { item: MenuItem }) {
       <div className="px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            {/* Name */}
-            <h4
-              className="font-black text-base leading-snug text-[#1C1B1B] mb-1"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              {item.name}
-            </h4>
+
+            {/* Name + variantes indicator (si pas d'image) */}
+            <div className="flex items-start gap-2 mb-1">
+              <h4
+                className="font-black text-base leading-snug text-[#1C1B1B] flex-1"
+                style={{ fontFamily: "var(--font-headline)" }}
+              >
+                {item.name}
+              </h4>
+              {hasVariants && !item.image && (
+                <span
+                  className="flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mt-0.5"
+                  style={{ backgroundColor: "#FFF0E8", color: "var(--color-primary)" }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 11 }}>tune</span>
+                  {item.variants!.length} tailles
+                </span>
+              )}
+            </div>
 
             {/* Description */}
             {item.description && (
@@ -92,43 +122,61 @@ export default function MenuItemCard({ item }: { item: MenuItem }) {
 
             {/* Variants selector */}
             {hasVariants && (
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {item.variants!.map((v) => {
-                  const active = selectedVariant?.id === v.id;
-                  return (
-                    <button
-                      key={v.id}
-                      onClick={() => setSelectedVariant(v)}
-                      className="px-3 py-1 rounded-full text-xs font-bold border transition-colors"
-                      style={{
-                        backgroundColor: active ? "#FFF0E8" : "#F6F4F2",
-                        borderColor: active ? "var(--color-primary)" : "#EDE8E5",
-                        color: active ? "var(--color-primary)" : "#6B5B53",
-                      }}
-                    >
-                      {v.name}
-                    </button>
-                  );
-                })}
+              <div className="mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#A09088" }}>
+                  Choisir une taille
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.variants!.map((v) => {
+                    const active = selectedVariant?.id === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariant(v)}
+                        className="flex flex-col items-center px-3 py-1.5 rounded-xl border-2 transition-all"
+                        style={{
+                          backgroundColor: active ? "#FFF0E8" : "#FAFAF9",
+                          borderColor: active ? "var(--color-primary)" : "#EDE8E5",
+                        }}
+                      >
+                        <span
+                          className="text-xs font-bold"
+                          style={{ color: active ? "var(--color-primary)" : "#1C1B1B" }}
+                        >
+                          {v.name}
+                        </span>
+                        <span
+                          className="text-[11px] font-black"
+                          style={{
+                            color: active ? "var(--color-primary)" : "#6B5B53",
+                            fontFamily: "var(--font-headline)",
+                          }}
+                        >
+                          {fmt(v.price, item.currency)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
             {/* Price */}
-            <div className="flex items-baseline gap-1.5">
-              {hasVariants && (
-                <span className="text-xs" style={{ color: "#A09088" }}>
-                  {selectedVariant?.name} —
+            <div className="flex items-baseline gap-2">
+              {hasVariants ? (
+                <>
+                  <span className="text-base font-black" style={{ fontFamily: "var(--font-headline)", color: unavailable ? "#A09088" : "var(--color-primary)" }}>
+                    {fmt(displayPrice, item.currency)}
+                  </span>
+                </>
+              ) : (
+                <span
+                  className="text-base font-black"
+                  style={{ fontFamily: "var(--font-headline)", color: unavailable ? "#A09088" : "var(--color-primary)" }}
+                >
+                  {fmt(item.price, item.currency)}
                 </span>
               )}
-              <span
-                className="text-base font-black"
-                style={{
-                  fontFamily: "var(--font-headline)",
-                  color: unavailable ? "#A09088" : "var(--color-primary)",
-                }}
-              >
-                {fmt(displayPrice, item.currency)}
-              </span>
             </div>
           </div>
 
