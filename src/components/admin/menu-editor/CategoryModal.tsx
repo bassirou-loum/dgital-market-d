@@ -33,7 +33,7 @@ export default function CategoryModal({ onSave, onClose }: CategoryModalProps) {
         style={{ backgroundColor: "var(--color-surface-container-lowest)" }}
       >
         <div
-          className="flex items-center justify-between px-8 py-6"
+          className="flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6"
           style={{ borderBottom: "1px solid rgba(227,191,178,0.15)" }}
         >
           <h2
@@ -47,7 +47,7 @@ export default function CategoryModal({ onSave, onClose }: CategoryModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-5">
+        <form onSubmit={handleSubmit} className="px-5 sm:px-8 py-5 sm:py-6 space-y-5">
           <div>
             <label
               className="block text-xs font-bold uppercase tracking-widest mb-2"

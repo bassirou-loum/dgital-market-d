@@ -139,7 +139,7 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-6 py-5"
+          className="flex items-center justify-between px-4 sm:px-6 py-5"
           style={{ borderBottom: "1px solid rgba(227,191,178,0.15)" }}
         >
           <div>
@@ -159,7 +159,7 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4 max-h-[72vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-5 space-y-4 max-h-[72vh] overflow-y-auto">
 
           {/* Name */}
           <Field label="Nom du plat *">
@@ -264,7 +264,7 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
                       onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
                       onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
                     />
-                    <div className="relative w-32 flex-shrink-0">
+                    <div className="relative w-24 sm:w-32 flex-shrink-0">
                       <input
                         type="number" min={0} value={v.price || ""} onChange={(e) => updateVariant(idx, "price", e.target.value)}
                         placeholder="Prix"
@@ -394,7 +394,7 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
         </form>
 
         {/* Actions */}
-        <div className="flex gap-3 px-6 py-5" style={{ borderTop: "1px solid rgba(227,191,178,0.15)" }}>
+        <div className="flex gap-3 px-4 sm:px-6 py-5" style={{ borderTop: "1px solid rgba(227,191,178,0.15)" }}>
           <button
             type="button" onClick={onClose}
             className="flex-1 py-3 rounded-full font-bold text-sm transition-all"

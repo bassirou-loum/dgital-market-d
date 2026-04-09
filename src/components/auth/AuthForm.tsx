@@ -13,11 +13,13 @@ export default function AuthForm({ mode }: { mode: Mode }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [restaurantName, setRestaurantName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,6 +28,11 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     setSuccess(null);
 
     if (mode === "register") {
+      if (password !== confirmPassword) {
+        setError("Les mots de passe ne correspondent pas.");
+        setLoading(false);
+        return;
+      }
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -144,6 +151,33 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             </button>
           </div>
         </Field>
+
+        {/* Confirm password — register only */}
+        {!isLogin && (
+          <Field label="Confirmer le mot de passe">
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                icon="lock_reset"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A09088] hover:text-[#1C1B1B] transition-colors"
+                tabIndex={-1}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                  {showConfirmPassword ? "visibility_off" : "visibility"}
+                </span>
+              </button>
+            </div>
+          </Field>
+        )}
 
         {/* Error */}
         {error && (

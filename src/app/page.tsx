@@ -39,34 +39,14 @@ const STEPS = [
   },
 ];
 
-const PLANS = [
-  {
-    name: "Gratuit",
-    price: "0",
-    period: "",
-    description: "Pour lancer votre premier menu digital sans engagement.",
-    highlight: false,
-    features: ["1 menu", "3 catégories", "10 plats", "QR code PNG"],
-    cta: "Commencer gratuitement",
-  },
-  {
-    name: "Standard",
-    price: "5 000",
-    period: "FCFA / mois",
-    description: "Le meilleur équilibre pour un restaurant actif.",
-    highlight: true,
-    features: ["3 menus", "50 plats", "Images des plats", "Statistiques basiques"],
-    cta: "Choisir Standard",
-  },
-  {
-    name: "Premium",
-    price: "10 000",
-    period: "FCFA / mois",
-    description: "Pour une marque forte avec une personnalisation complète.",
-    highlight: false,
-    features: ["Menus illimités", "Statistiques avancées", "Multi-langue", "Support prioritaire"],
-    cta: "Choisir Premium",
-  },
+const PLAN_FEATURES = [
+  "Menus et catégories illimités",
+  "Plats illimités avec photos",
+  "QR code PNG téléchargeable",
+  "Mise à jour en temps réel",
+  "Statistiques de vues",
+  "Gestion de l'équipe",
+  "Support par email",
 ];
 
 export default function Home() {
@@ -135,7 +115,7 @@ export default function Home() {
               </div>
 
               <h1
-                className="text-[2.75rem] md:text-6xl font-black leading-[1.07] tracking-tight mb-6"
+                className="text-3xl sm:text-[2.75rem] md:text-6xl font-black leading-[1.07] tracking-tight mb-6"
                 style={{ fontFamily: "var(--font-headline)" }}
               >
                 La carte de votre restaurant, toujours à jour, sans papier.
@@ -187,7 +167,7 @@ export default function Home() {
             </div>
 
             {/* Right — phone mockup */}
-            <div className="relative flex justify-center lg:justify-end">
+            <div className="relative hidden sm:flex justify-center lg:justify-end">
               {/* Floating badge top-right */}
               <div className="absolute -top-2 right-0 bg-white border border-[#EDE8E5] rounded-2xl px-3.5 py-2.5 z-10 shadow-sm">
                 <p className="text-xs font-bold text-[#1C1B1B]">128 scans</p>
@@ -385,7 +365,7 @@ export default function Home() {
       {/* ── PRICING ── */}
       <section id="tarifs" className="px-5 md:px-8 py-24 bg-white">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-14">
+          <div className="mb-14 text-center">
             <p
               className="text-xs font-bold uppercase tracking-widest mb-3"
               style={{ color: "var(--color-primary)" }}
@@ -393,84 +373,75 @@ export default function Home() {
               Tarifs
             </p>
             <h2
-              className="text-3xl md:text-4xl font-black leading-tight max-w-xl"
+              className="text-3xl md:text-4xl font-black leading-tight max-w-xl mx-auto"
               style={{ fontFamily: "var(--font-headline)" }}
             >
-              Commencez gratuitement, évoluez quand votre salle accélère.
+              Essayez 7 jours gratuitement, sans carte bancaire.
             </h2>
+            <p className="mt-4 text-base max-w-md mx-auto" style={{ color: "#6B5B53" }}>
+              Testez toutes les fonctionnalités pendant une semaine. Si vous êtes satisfait, continuez pour seulement <strong style={{ color: "#1C1B1B" }}>7 000 FCFA / mois</strong>.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5">
-            {PLANS.map((plan) => (
-              <article
-                key={plan.name}
-                className="rounded-2xl border p-7 flex flex-col"
-                style={
-                  plan.highlight
-                    ? {
-                        borderColor: "var(--color-primary)",
-                        backgroundColor: "#FFF8F5",
-                      }
-                    : { borderColor: "#EDE8E5" }
-                }
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-black" style={{ fontFamily: "var(--font-headline)" }}>
-                    {plan.name}
-                  </h3>
-                  {plan.highlight && (
-                    <span
-                      className="text-[11px] font-bold uppercase tracking-widest rounded-full px-2.5 py-1 text-white"
-                      style={{ backgroundColor: "var(--color-primary)" }}
-                    >
-                      Recommandé
-                    </span>
-                  )}
-                </div>
-
-                <div className="mb-2">
-                  <span
-                    className="text-4xl font-black"
-                    style={{ fontFamily: "var(--font-headline)", color: plan.highlight ? "var(--color-primary)" : "#1C1B1B" }}
-                  >
-                    {plan.price}
-                  </span>
-                  {plan.period && (
-                    <span className="text-sm ml-1.5" style={{ color: "#6B5B53" }}>{plan.period}</span>
-                  )}
-                </div>
-
-                <p className="text-sm leading-6 mb-6" style={{ color: "#6B5B53" }}>
-                  {plan.description}
-                </p>
-
-                <ul className="space-y-3 mb-8 flex-1">
-                  {plan.features.map((feat) => (
-                    <li key={feat} className="flex items-center gap-2.5 text-sm font-medium">
-                      <span
-                        className="material-symbols-outlined flex-shrink-0"
-                        style={{ fontSize: 18, color: "var(--color-primary)" }}
-                      >
-                        check
-                      </span>
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  href="/register"
-                  className="block text-center rounded-full py-3 text-sm font-bold transition-opacity hover:opacity-85"
-                  style={
-                    plan.highlight
-                      ? { backgroundColor: "var(--color-primary)", color: "#fff" }
-                      : { backgroundColor: "#F0EDEC", color: "#1C1B1B" }
-                  }
+          <div className="max-w-md mx-auto">
+            <article
+              className="rounded-2xl border-2 p-8 flex flex-col"
+              style={{ borderColor: "var(--color-primary)", backgroundColor: "#FFF8F5" }}
+            >
+              {/* Badge essai */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-black" style={{ fontFamily: "var(--font-headline)" }}>
+                  Accès complet
+                </h3>
+                <span
+                  className="text-[11px] font-bold uppercase tracking-widest rounded-full px-3 py-1 text-white"
+                  style={{ backgroundColor: "var(--color-primary)" }}
                 >
-                  {plan.cta}
-                </Link>
-              </article>
-            ))}
+                  7 jours offerts
+                </span>
+              </div>
+
+              {/* Prix */}
+              <div className="mb-1">
+                <span
+                  className="text-5xl font-black"
+                  style={{ fontFamily: "var(--font-headline)", color: "var(--color-primary)" }}
+                >
+                  7 000
+                </span>
+                <span className="text-sm ml-2" style={{ color: "#6B5B53" }}>FCFA / mois</span>
+              </div>
+              <p className="text-sm mb-8" style={{ color: "#A09088" }}>
+                après votre période d&apos;essai gratuite de 7 jours
+              </p>
+
+              {/* Features */}
+              <ul className="space-y-3 mb-8">
+                {PLAN_FEATURES.map((feat) => (
+                  <li key={feat} className="flex items-center gap-2.5 text-sm font-medium">
+                    <span
+                      className="material-symbols-outlined flex-shrink-0"
+                      style={{ fontSize: 18, color: "var(--color-primary)" }}
+                    >
+                      check
+                    </span>
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/register"
+                className="block text-center rounded-full py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: "var(--color-primary)" }}
+              >
+                Démarrer mon essai gratuit
+              </Link>
+
+              <p className="text-center text-xs mt-4" style={{ color: "#A09088" }}>
+                Aucune carte bancaire requise · Résiliable à tout moment
+              </p>
+            </article>
           </div>
         </div>
       </section>
@@ -478,7 +449,7 @@ export default function Home() {
       {/* ── CTA FINAL ── */}
       <section className="px-5 md:px-8 py-8 pb-16 bg-white">
         <div
-          className="mx-auto max-w-6xl rounded-3xl px-8 py-16 text-center"
+          className="mx-auto max-w-6xl rounded-3xl px-5 sm:px-8 py-12 sm:py-16 text-center"
           style={{ backgroundColor: "#1C1B1B" }}
         >
           <p

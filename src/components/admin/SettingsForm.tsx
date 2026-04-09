@@ -58,7 +58,7 @@ export default function SettingsForm({ restaurant }: { restaurant: DbRestaurant 
     <div className="max-w-2xl space-y-5">
 
       {/* ── Plan actif ── */}
-      <div className="bg-white rounded-2xl border border-[#EDE8E5] px-5 py-4 flex items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#EDE8E5] px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#A09088" }}>
             Plan actif
@@ -204,12 +204,12 @@ export default function SettingsForm({ restaurant }: { restaurant: DbRestaurant 
             Zone de danger
           </h3>
         </div>
-        <div className="px-5 py-4 flex items-center justify-between gap-4">
+        <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <p className="text-sm" style={{ color: "#6B5B53" }}>
             Supprimer votre compte supprime définitivement toutes vos données.
           </p>
           <button
-            className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors hover:bg-red-100"
+            className="self-start sm:self-auto flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-colors hover:bg-red-100"
             style={{ backgroundColor: "#FFF0EE", color: "#BA1A1A" }}
           >
             Supprimer
