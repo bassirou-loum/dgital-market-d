@@ -1,7 +1,7 @@
 export type Badge = "V" | "GF" | "VG" | "SPICY" | "NEW" | "CHEF";
 
 export interface ItemVariant {
-  id: string;
+  id?: string;
   name: string;
   price: number;
   position: number;
