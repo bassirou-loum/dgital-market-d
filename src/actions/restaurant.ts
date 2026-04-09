@@ -54,3 +54,28 @@ export async function uploadLogo(formData: FormData): Promise<{ url?: string; er
 
   return { url: publicUrl };
 }
+
+export async function uploadDishImage(formData: FormData): Promise<{ url?: string; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié" };
+
+  const file = formData.get("image") as File;
+  if (!file || file.size === 0) return { error: "Fichier manquant" };
+  if (file.size > 5 * 1024 * 1024) return { error: "Image trop lourde (max 5 MB)" };
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const path = `${user.id}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("dishes")
+    .upload(path, file, { upsert: false, contentType: file.type });
+
+  if (uploadError) return { error: uploadError.message };
+
+  const { data: { publicUrl } } = supabase.storage
+    .from("dishes")
+    .getPublicUrl(path);
+
+  return { url: publicUrl };
+}

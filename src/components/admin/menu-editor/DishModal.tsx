@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MenuItem, Badge, ItemVariant } from "@/types/menu";
+import { uploadDishImage } from "@/actions/restaurant";
 
 interface DishModalProps {
   item?: MenuItem | null;
@@ -49,6 +50,9 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
   const [image, setImage]             = useState(item?.image ?? "");
   const [available, setAvailable]     = useState(item?.available ?? true);
   const [badges, setBadges]           = useState<Badge[]>(item?.badges ?? []);
+  const [uploading, setUploading]     = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef                  = useRef<HTMLInputElement>(null);
 
   // Variants
   const [useVariants, setUseVariants] = useState((item?.variants?.length ?? 0) > 0);
@@ -61,6 +65,25 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [onClose]);
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    // Preview local immédiat
+    setImage(URL.createObjectURL(file));
+    const fd = new FormData();
+    fd.append("image", file);
+    const result = await uploadDishImage(fd);
+    if (result.error) {
+      setUploadError(result.error);
+      setImage(item?.image ?? "");
+    } else if (result.url) {
+      setImage(result.url);
+    }
+    setUploading(false);
+  }
 
   function toggleBadge(b: Badge) {
     setBadges((prev) => prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]);
@@ -267,15 +290,61 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
             </div>
           )}
 
-          {/* Image URL */}
-          <Field label="URL de l'image">
+          {/* Image upload */}
+          <Field label="Photo du plat">
+            <div
+              className="relative rounded-2xl overflow-hidden border-2 border-dashed transition-colors cursor-pointer"
+              style={{ borderColor: uploadError ? "#BA1A1A" : image ? "transparent" : "#E0D9D5" }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {image ? (
+                <div className="relative h-36">
+                  <img src={image} alt="Aperçu" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-2 text-white text-sm font-bold">
+                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>photo_camera</span>
+                      Changer la photo
+                    </div>
+                  </div>
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-white animate-spin" style={{ fontSize: 28 }}>progress_activity</span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setImage(""); }}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center bg-black/60 hover:bg-black/80 transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-white" style={{ fontSize: 14 }}>close</span>
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="h-28 flex flex-col items-center justify-center gap-2"
+                  style={{ backgroundColor: "var(--color-surface-container-low)" }}
+                >
+                  {uploading ? (
+                    <span className="material-symbols-outlined animate-spin" style={{ fontSize: 28, color: "var(--color-primary)" }}>progress_activity</span>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined" style={{ fontSize: 28, color: "#A09088" }}>add_photo_alternate</span>
+                      <p className="text-xs font-semibold" style={{ color: "#A09088" }}>Appuyer pour ajouter une photo</p>
+                      <p className="text-[10px]" style={{ color: "#C0B4AE" }}>JPG, PNG, WEBP — max 5 MB</p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            {uploadError && (
+              <p className="text-xs mt-1.5" style={{ color: "#BA1A1A" }}>{uploadError}</p>
+            )}
             <input
-              type="url" value={image} onChange={(e) => setImage(e.target.value)}
-              placeholder="https://..."
-              className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition-all"
-              style={INPUT_STYLE}
-              onFocus={(e) => { e.target.style.borderColor = "var(--color-primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "transparent"; }}
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleImageChange}
             />
           </Field>
 
