@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getAllRestaurants, getSuperAdminStats } from "@/lib/dal/superadmin";
 import RestaurantsTable from "@/components/superadmin/RestaurantsTable";
 
-export const metadata: Metadata = { title: "Super Admin — Digital Maître D'" };
+export const metadata: Metadata = { title: "Super Admin — Lëkkal Digital" };
 export const dynamic = "force-dynamic";
 
 const STATUS_META = {

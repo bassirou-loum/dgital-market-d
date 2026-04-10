@@ -48,7 +48,7 @@ export default function AdminTopBar() {
             className="font-black text-sm tracking-tight"
             style={{ fontFamily: "var(--font-headline)", color: "#1C1B1B" }}
           >
-            Digital Maître D&apos;
+            Lëkkal Digital
           </span>
         </div>
       </div>

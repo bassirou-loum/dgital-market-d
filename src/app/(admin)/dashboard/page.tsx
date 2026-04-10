@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getMyRestaurant } from "@/lib/dal/restaurant";
 import { getDashboardStats } from "@/lib/dal/menu";
 
-export const metadata: Metadata = { title: "Dashboard — Digital Maître D'" };
+export const metadata: Metadata = { title: "Dashboard — Lëkkal Digital" };
 
 function getGreeting() {
   const h = new Date().getHours();

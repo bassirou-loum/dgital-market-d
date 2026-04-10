@@ -1,4 +1,6 @@
+"use client";
 import Link from "next/link";
+import { useState } from "react";
 
 const FEATURES = [
   {
@@ -50,6 +52,8 @@ const PLAN_FEATURES = [
 ];
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="bg-white" style={{ fontFamily: "var(--font-body)", color: "#1C1B1B" }}>
 
@@ -67,7 +71,7 @@ export default function Home() {
               className="font-black text-[15px] tracking-tight"
               style={{ fontFamily: "var(--font-headline)" }}
             >
-              Digital Maître D&apos;
+              Lëkkal Digital
             </span>
           </Link>
 
@@ -92,8 +96,46 @@ export default function Home() {
             >
               Commencer
             </Link>
+            {/* Hamburger mobile */}
+            <button
+              className="md:hidden p-2 rounded-xl"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Menu"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 24, color: "#1C1B1B" }}>
+                {menuOpen ? "close" : "menu"}
+              </span>
+            </button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="md:hidden border-t border-[#EDE8E5] px-5 py-4 flex flex-col gap-1 bg-white">
+            {[
+              { href: "#fonctionnalites", label: "Fonctionnalités" },
+              { href: "#comment", label: "Comment ça marche" },
+              { href: "#tarifs", label: "Tarifs" },
+              { href: "/menu/le-petit-bistro", label: "Démo" },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="py-3 text-sm font-semibold text-[#1C1B1B] border-b border-[#F0EDEC] last:border-0"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              className="py-3 text-sm font-semibold text-[#6B5B53]"
+            >
+              Connexion
+            </Link>
+          </div>
+        )}
       </header>
 
       {/* ── HERO ── */}
@@ -497,11 +539,11 @@ export default function Home() {
               <span className="material-symbols-outlined text-white" style={{ fontSize: 15 }}>restaurant</span>
             </div>
             <span className="font-black text-sm" style={{ fontFamily: "var(--font-headline)" }}>
-              Digital Maître D&apos;
+              Lëkkal Digital
             </span>
           </div>
           <p className="text-xs" style={{ color: "#A09088" }}>
-            © {new Date().getFullYear()} Digital Maître D&apos;. Tous droits réservés.
+            © {new Date().getFullYear()} Lëkkal Digital. Tous droits réservés.
           </p>
           <div className="flex gap-5 text-xs font-medium" style={{ color: "#6B5B53" }}>
             <Link href="/login" className="hover:text-[#1C1B1B] transition-colors">Connexion</Link>

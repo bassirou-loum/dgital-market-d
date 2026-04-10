@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             className="font-black text-white text-base tracking-tight"
             style={{ fontFamily: "var(--font-headline)" }}
           >
-            Digital Maître D&apos;
+            Lëkkal Digital
           </span>
         </Link>
 
@@ -95,7 +95,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <span className="material-symbols-outlined text-white" style={{ fontSize: 18 }}>restaurant</span>
             </div>
             <span className="font-black text-sm tracking-tight" style={{ fontFamily: "var(--font-headline)" }}>
-              Digital Maître D&apos;
+              Lëkkal Digital
             </span>
           </Link>
         </div>
