@@ -141,7 +141,7 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="px-5 md:px-8 pt-20 pb-24">
         <div className="mx-auto max-w-6xl">
-          <div className="grid lg:grid-cols-[1fr_420px] gap-16 items-center">
+          <div className="flex flex-col-reverse lg:grid lg:grid-cols-[1fr_420px] gap-10 lg:gap-16 items-center">
 
             {/* Left */}
             <div>
