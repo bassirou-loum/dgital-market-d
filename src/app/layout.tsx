@@ -13,7 +13,7 @@ const notoSerif = Noto_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Digital Maître D'",
+  title: "Lëkkal Digital",
   description: "Plateforme de menus digitaux avec QR code pour restaurants",
 };
 

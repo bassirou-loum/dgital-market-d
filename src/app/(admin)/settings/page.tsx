@@ -5,7 +5,7 @@ import SettingsForm from "@/components/admin/SettingsForm";
 import TeamSection from "@/components/admin/TeamSection";
 import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Paramètres — Digital Maître D'" };
+export const metadata: Metadata = { title: "Paramètres — Lëkkal Digital" };
 
 export default async function SettingsPage() {
   const [restaurant, teamMember] = await Promise.all([getMyRestaurant(), isTeamMember()]);

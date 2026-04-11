@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import QRGenerator from "@/components/admin/QRGenerator";
 import { getMyRestaurant } from "@/lib/dal/restaurant";
 
-export const metadata: Metadata = { title: "Générateur QR — Digital Maître D'" };
+export const metadata: Metadata = { title: "Générateur QR — Lëkkal Digital" };
 
 export default async function QRPage() {
   const restaurant = await getMyRestaurant();

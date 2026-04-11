@@ -6,7 +6,7 @@ import type { Restaurant, MenuCategory, MenuItem } from "@/types/menu";
 import type { Badge } from "@/types/menu";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Éditeur de menu — Digital Maître D'" };
+export const metadata: Metadata = { title: "Éditeur de menu — Lëkkal Digital" };
 
 export default async function MenuEditorPage() {
   const restaurant = await getMyRestaurant();
