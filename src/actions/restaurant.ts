@@ -8,6 +8,7 @@ export async function updateRestaurantProfile(data: {
   address?: string;
   phone?: string;
   logo_url?: string;
+  primary_color?: string | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,6 +21,7 @@ export async function updateRestaurantProfile(data: {
       address: data.address ?? null,
       phone: data.phone ?? null,
       logo_url: data.logo_url ?? null,
+      primary_color: data.primary_color ?? null,
     })
     .eq("owner_id", user.id);
 

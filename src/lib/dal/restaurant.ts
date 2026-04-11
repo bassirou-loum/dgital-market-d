@@ -8,6 +8,7 @@ export interface DbRestaurant {
   address: string | null;
   phone: string | null;
   logo_url: string | null;
+  primary_color: string | null;
   plan: "gratuit" | "standard" | "premium";
   subscription_status: "none" | "trial" | "active" | "expired";
   subscription_end: string | null;
@@ -23,7 +24,7 @@ export async function getMyRestaurant(): Promise<DbRestaurant> {
   // Essayer d'abord en tant que propriétaire
   const { data: owned } = await supabase
     .from("restaurants")
-    .select("id, name, slug, address, phone, logo_url, plan, subscription_status, subscription_end")
+    .select("id, name, slug, address, phone, logo_url, primary_color, plan, subscription_status, subscription_end")
     .eq("owner_id", user.id)
     .single();
 
@@ -40,7 +41,7 @@ export async function getMyRestaurant(): Promise<DbRestaurant> {
 
   const { data: memberRestaurant, error } = await supabase
     .from("restaurants")
-    .select("id, name, slug, address, phone, logo_url, plan, subscription_status, subscription_end")
+    .select("id, name, slug, address, phone, logo_url, primary_color, plan, subscription_status, subscription_end")
     .eq("id", membership.restaurant_id)
     .single();
 
@@ -70,7 +71,7 @@ export async function getRestaurantBySlug(slug: string): Promise<DbRestaurant | 
 
   const { data } = await supabase
     .from("restaurants")
-    .select("id, name, slug, address, phone, logo_url, plan, subscription_status, subscription_end")
+    .select("id, name, slug, address, phone, logo_url, primary_color, plan, subscription_status, subscription_end")
     .eq("slug", slug)
     .single();
 

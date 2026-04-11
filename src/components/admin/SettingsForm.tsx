@@ -4,6 +4,17 @@ import { useState, useRef } from "react";
 import { updateRestaurantProfile, uploadLogo } from "@/actions/restaurant";
 import type { DbRestaurant } from "@/lib/dal/restaurant";
 
+const COLOR_PALETTE = [
+  { value: "#9e3d00", label: "Terracotta" },
+  { value: "#1c1b1b", label: "Anthracite" },
+  { value: "#065f46", label: "Forêt" },
+  { value: "#1e3a8a", label: "Marine" },
+  { value: "#7c3aed", label: "Violet" },
+  { value: "#be185d", label: "Rose" },
+  { value: "#b45309", label: "Ambre" },
+  { value: "#0f766e", label: "Émeraude" },
+];
+
 const PLAN_INFO: Record<string, { label: string; desc: string; badge: { bg: string; text: string } }> = {
   gratuit:  { label: "Gratuit",  desc: "1 menu · 10 plats · 3 catégories",               badge: { bg: "#F0EDEC", text: "#6B5B53" } },
   standard: { label: "Standard", desc: "3 menus · 50 plats · 10 catégories",              badge: { bg: "#FFF0E8", text: "var(--color-primary)" } },
@@ -11,14 +22,16 @@ const PLAN_INFO: Record<string, { label: string; desc: string; badge: { bg: stri
 };
 
 export default function SettingsForm({ restaurant }: { restaurant: DbRestaurant }) {
-  const [name,     setName]     = useState(restaurant.name);
-  const [address,  setAddress]  = useState(restaurant.address ?? "");
-  const [phone,    setPhone]    = useState(restaurant.phone ?? "");
-  const [logoUrl,  setLogoUrl]  = useState(restaurant.logo_url ?? "");
-  const [preview,  setPreview]  = useState(restaurant.logo_url ?? "");
-  const [saving,   setSaving]   = useState(false);
-  const [uploading,setUploading]= useState(false);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [name,         setName]         = useState(restaurant.name);
+  const [address,      setAddress]      = useState(restaurant.address ?? "");
+  const [phone,        setPhone]        = useState(restaurant.phone ?? "");
+  const [logoUrl,      setLogoUrl]      = useState(restaurant.logo_url ?? "");
+  const [preview,      setPreview]      = useState(restaurant.logo_url ?? "");
+  const [primaryColor,  setPrimaryColor]  = useState(restaurant.primary_color ?? "#9e3d00");
+  const [colorStatus,   setColorStatus]   = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saving,        setSaving]        = useState(false);
+  const [uploading,     setUploading]     = useState(false);
+  const [feedback,      setFeedback]      = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const plan = PLAN_INFO[restaurant.plan] ?? PLAN_INFO.gratuit;
@@ -41,11 +54,27 @@ export default function SettingsForm({ restaurant }: { restaurant: DbRestaurant 
     setUploading(false);
   }
 
+  async function saveColor(color: string) {
+    setColorStatus("saving");
+    const result = await updateRestaurantProfile({ name, address, phone, logo_url: logoUrl, primary_color: color });
+    if (result?.error) {
+      setColorStatus("error");
+    } else {
+      setColorStatus("saved");
+      setTimeout(() => setColorStatus("idle"), 2000);
+    }
+  }
+
+  async function handlePaletteClick(color: string) {
+    setPrimaryColor(color);
+    await saveColor(color);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setFeedback(null);
-    const result = await updateRestaurantProfile({ name, address, phone, logo_url: logoUrl });
+    const result = await updateRestaurantProfile({ name, address, phone, logo_url: logoUrl, primary_color: primaryColor });
     if (result?.error) {
       setFeedback({ type: "error", msg: result.error });
     } else {
@@ -195,6 +224,117 @@ export default function SettingsForm({ restaurant }: { restaurant: DbRestaurant 
             ) : "Enregistrer les modifications"}
           </button>
         </form>
+      </div>
+
+      {/* ── Apparence ── */}
+      <div className="bg-white rounded-2xl border border-[#EDE8E5] overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#EDE8E5] flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-black text-[#1C1B1B]" style={{ fontFamily: "var(--font-headline)" }}>
+              Couleur principale
+            </h2>
+            <p className="text-xs mt-0.5" style={{ color: "#A09088" }}>
+              Appliquée sur le menu public visible par vos clients
+            </p>
+          </div>
+          {/* Statut + aperçu */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {colorStatus === "saving" && (
+              <span className="material-symbols-outlined animate-spin" style={{ fontSize: 16, color: "#A09088" }}>progress_activity</span>
+            )}
+            {colorStatus === "saved" && (
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#15803D" }}>check_circle</span>
+            )}
+            {colorStatus === "error" && (
+              <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#BA1A1A" }}>error_outline</span>
+            )}
+            <div
+              className="w-8 h-8 rounded-xl border border-[#EDE8E5] transition-colors"
+              style={{ backgroundColor: primaryColor }}
+            />
+          </div>
+        </div>
+
+        <div className="px-5 py-5 space-y-4">
+          {restaurant.plan === "gratuit" ? (
+            /* Gratuit : verrouillé */
+            <div className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "#F6F4F2" }}>
+              <span className="material-symbols-outlined flex-shrink-0 mt-0.5" style={{ fontSize: 18, color: "#A09088" }}>lock</span>
+              <div>
+                <p className="text-sm font-semibold text-[#1C1B1B]">Personnalisation non disponible</p>
+                <p className="text-xs mt-0.5" style={{ color: "#A09088" }}>
+                  Passez au plan Standard pour choisir parmi 8 couleurs, ou Premium pour une couleur libre.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Palette prédéfinie — sauvegarde auto au clic */}
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#A09088" }}>
+                  Palette
+                </p>
+                <div className="flex flex-wrap gap-2.5">
+                  {COLOR_PALETTE.map((c) => {
+                    const active = primaryColor === c.value;
+                    return (
+                      <button
+                        key={c.value}
+                        type="button"
+                        title={c.label}
+                        onClick={() => handlePaletteClick(c.value)}
+                        disabled={colorStatus === "saving"}
+                        className="w-9 h-9 rounded-full transition-transform hover:scale-110 relative disabled:opacity-50"
+                        style={{
+                          backgroundColor: c.value,
+                          outline: active ? `3px solid ${c.value}` : "none",
+                          outlineOffset: "2px",
+                          border: "2px solid rgba(255,255,255,0.7)",
+                        }}
+                      >
+                        {active && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-white" style={{ fontSize: 16 }}>check</span>
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Couleur libre — Premium, bouton Appliquer dédié */}
+              {restaurant.plan === "premium" && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#A09088" }}>
+                    Couleur personnalisée
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="w-10 h-10 rounded-xl cursor-pointer border border-[#EDE8E5] p-0.5"
+                      style={{ backgroundColor: "transparent" }}
+                    />
+                    <span className="text-sm font-mono font-semibold text-[#1C1B1B]">
+                      {primaryColor.toUpperCase()}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => saveColor(primaryColor)}
+                      disabled={colorStatus === "saving"}
+                      className="ml-auto px-4 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {colorStatus === "saving" ? "…" : "Appliquer"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* ── Danger zone ── */}

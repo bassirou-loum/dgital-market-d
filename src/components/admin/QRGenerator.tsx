@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
+import { jsPDF } from "jspdf";
 
 const COLORS = [
   { value: "#9e3d00", label: "Terracotta" },
@@ -13,9 +14,11 @@ const COLORS = [
 export default function QRGenerator({
   restaurantName,
   menuUrl,
+  logoUrl,
 }: {
   restaurantName: string;
   menuUrl: string;
+  logoUrl?: string | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [color, setColor]           = useState(COLORS[0].value);
@@ -23,14 +26,10 @@ export default function QRGenerator({
   const [roundedDots, setRoundedDots] = useState(false);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
-    QRCode.toCanvas(canvasRef.current, menuUrl, {
-      width: 256,
-      margin: 2,
-      color: { dark: color, light: "#ffffff" },
-      errorCorrectionLevel: includeLogo ? "H" : "M",
-    });
-  }, [menuUrl, color, includeLogo]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    drawQR(canvas, menuUrl, { color, rounded: roundedDots, size: 256, errorLevel: includeLogo ? "H" : "M" });
+  }, [menuUrl, color, includeLogo, roundedDots]);
 
   function downloadPNG() {
     if (!canvasRef.current) return;
@@ -38,6 +37,86 @@ export default function QRGenerator({
     a.download = `qr-${restaurantName.toLowerCase().replace(/\s+/g, "-")}.png`;
     a.href = canvasRef.current.toDataURL("image/png");
     a.click();
+  }
+
+  function downloadPDF() {
+    if (!canvasRef.current) return;
+
+    // Générer un canvas haute résolution (512×512) pour le PDF
+    const hiCanvas = document.createElement("canvas");
+    drawQR(hiCanvas, menuUrl, { color, rounded: roundedDots, size: 512, errorLevel: includeLogo ? "H" : "M" })
+      .then(() => {
+      const qrData = hiCanvas.toDataURL("image/png");
+
+      // Format A5 portrait (148 × 210 mm)
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a5" });
+      const W = 148;
+      const H = 210;
+
+      // Fond blanc
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, W, H, "F");
+
+      // Cadre extérieur
+      doc.setDrawColor(220, 213, 208);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(8, 8, W - 16, H - 16, 4, 4, "S");
+
+      // Logo restaurant (si disponible)
+      const logoSize = 12;
+      const logoY    = 18;
+      if (logoUrl) {
+        try {
+          doc.addImage(logoUrl, "JPEG", (W - logoSize) / 2, logoY, logoSize, logoSize, undefined, "FAST");
+        } catch {
+          // logo non chargeable, on ignore
+        }
+      }
+      const titleY = logoUrl ? logoY + logoSize + 6 : 28;
+
+      // Titre restaurant
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(28, 27, 27);
+      doc.text(restaurantName, W / 2, titleY, { align: "center" });
+
+      // Sous-titre
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(107, 91, 83);
+      doc.text("Scannez pour consulter le menu", W / 2, titleY + 7, { align: "center" });
+
+      // Séparateur
+      doc.setDrawColor(237, 232, 229);
+      doc.setLineWidth(0.3);
+      doc.line(20, titleY + 12, W - 20, titleY + 12);
+
+      // QR code centré
+      const qrSize = 90;
+      const qrX = (W - qrSize) / 2;
+      const qrY  = titleY + 20;
+      doc.addImage(qrData, "PNG", qrX, qrY, qrSize, qrSize);
+
+      // Label sous le QR
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(28, 27, 27);
+      doc.text("Menu — Table #01", W / 2, qrY + qrSize + 12, { align: "center" });
+
+      // URL en petit
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(160, 144, 136);
+      doc.text(menuUrl, W / 2, qrY + qrSize + 20, { align: "center" });
+
+      // Pied de page
+      doc.setFontSize(7);
+      doc.setTextColor(192, 180, 174);
+      doc.text("Digital Maître D'", W / 2, H - 12, { align: "center" });
+
+      const slug = restaurantName.toLowerCase().replace(/\s+/g, "-");
+      doc.save(`qr-${slug}.pdf`);
+    });
   }
 
   return (
@@ -48,27 +127,31 @@ export default function QRGenerator({
         {/* Card */}
         <div className="bg-[#FAFAF9] rounded-2xl border border-[#EDE8E5] p-8 flex flex-col items-center w-full max-w-xs">
           <div className="relative w-56 h-56 flex items-center justify-center bg-white rounded-xl border border-[#EDE8E5]">
-            <canvas
-              ref={canvasRef}
-              className="w-full h-full"
-              style={{ borderRadius: roundedDots ? "0.5rem" : "0" }}
-            />
+            <canvas ref={canvasRef} className="w-full h-full" />
             {includeLogo && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="bg-white p-1.5 rounded-lg border border-[#EDE8E5] shadow-sm">
-                  <div
-                    className="w-8 h-8 rounded flex items-center justify-center text-white text-xs font-black"
-                    style={{ backgroundColor: color, fontFamily: "var(--font-headline)" }}
-                  >
-                    R
-                  </div>
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt={restaurantName}
+                      className="w-8 h-8 rounded object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="w-8 h-8 rounded flex items-center justify-center text-white text-xs font-black"
+                      style={{ backgroundColor: color, fontFamily: "var(--font-headline)" }}
+                    >
+                      {restaurantName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
           <div className="mt-5 text-center">
             <p className="text-base font-black text-[#1C1B1B]" style={{ fontFamily: "var(--font-headline)" }}>
-              Menu — Table #01
+              {restaurantName}
             </p>
             <p className="text-xs mt-1 font-medium" style={{ color: "#A09088" }}>
               {restaurantName}
@@ -87,6 +170,7 @@ export default function QRGenerator({
             Télécharger PNG
           </button>
           <button
+            onClick={downloadPDF}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border border-[#EDE8E5] text-[#1C1B1B] transition-colors hover:bg-[#FAFAF9]"
           >
             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>picture_as_pdf</span>
@@ -179,6 +263,54 @@ export default function QRGenerator({
       </div>
     </div>
   );
+}
+
+/* ── Dessin QR manuel (permet les points arrondis) ── */
+async function drawQR(
+  canvas: HTMLCanvasElement,
+  url: string,
+  opts: { color: string; rounded: boolean; size: number; errorLevel: "L" | "M" | "Q" | "H" }
+) {
+  const qr = QRCode.create(url, { errorCorrectionLevel: opts.errorLevel });
+  const modules    = qr.modules;
+  const count      = modules.size;
+  const margin     = 2;
+  const total      = count + margin * 2;
+  const moduleSize = opts.size / total;
+
+  canvas.width  = opts.size;
+  canvas.height = opts.size;
+  const ctx = canvas.getContext("2d")!;
+
+  // Fond blanc
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, opts.size, opts.size);
+
+  ctx.fillStyle = opts.color;
+  for (let row = 0; row < count; row++) {
+    for (let col = 0; col < count; col++) {
+      if (!modules.data[row * count + col]) continue;
+      const x = (col + margin) * moduleSize;
+      const y = (row + margin) * moduleSize;
+      if (opts.rounded) {
+        const r = moduleSize * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + moduleSize - r, y);
+        ctx.arcTo(x + moduleSize, y, x + moduleSize, y + r, r);
+        ctx.lineTo(x + moduleSize, y + moduleSize - r);
+        ctx.arcTo(x + moduleSize, y + moduleSize, x + moduleSize - r, y + moduleSize, r);
+        ctx.lineTo(x + r, y + moduleSize);
+        ctx.arcTo(x, y + moduleSize, x, y + moduleSize - r, r);
+        ctx.lineTo(x, y + r);
+        ctx.arcTo(x, y, x + r, y, r);
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.fillRect(x, y, moduleSize, moduleSize);
+      }
+    }
+  }
 }
 
 function Toggle({

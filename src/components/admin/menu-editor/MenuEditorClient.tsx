@@ -6,6 +6,7 @@ import CategorySidebar from "./CategorySidebar";
 import DishCard from "./DishCard";
 import DishModal from "./DishModal";
 import CategoryModal from "./CategoryModal";
+import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import DailySpecialPanel from "./DailySpecialPanel";
 import { toggleItemAvailable, saveItem, deleteItem, addCategory } from "@/actions/menu";
 
@@ -34,6 +35,7 @@ export default function MenuEditorClient({
   const [showDishModal,     setShowDishModal]     = useState(false);
   const [editingItem,       setEditingItem]       = useState<MenuItem | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [deletingItem,      setDeletingItem]      = useState<MenuItem | null>(null);
 
   const activeCategory = categories.find((c) => c.id === activeCatId);
   const performance    = calcPerformance(categories);
@@ -71,9 +73,15 @@ export default function MenuEditorClient({
   }
 
   function handleDeleteDish(itemId: string) {
-    if (!confirm("Supprimer ce plat ?")) return;
-    setCategories((prev) => prev.map((cat) => ({ ...cat, items: cat.items.filter((i) => i.id !== itemId) })));
-    startTransition(() => { deleteItem(itemId); });
+    const item = categories.flatMap((c) => c.items).find((i) => i.id === itemId);
+    if (item) setDeletingItem(item);
+  }
+
+  function confirmDeleteDish() {
+    if (!deletingItem) return;
+    setCategories((prev) => prev.map((cat) => ({ ...cat, items: cat.items.filter((i) => i.id !== deletingItem.id) })));
+    startTransition(() => { deleteItem(deletingItem.id); });
+    setDeletingItem(null);
   }
 
   function handleAddCategory(name: string) {
@@ -232,6 +240,13 @@ export default function MenuEditorClient({
         <CategoryModal
           onSave={handleAddCategory}
           onClose={() => setShowCategoryModal(false)}
+        />
+      )}
+      {deletingItem && (
+        <ConfirmDeleteModal
+          dishName={deletingItem.name}
+          onConfirm={confirmDeleteDish}
+          onClose={() => setDeletingItem(null)}
         />
       )}
     </div>

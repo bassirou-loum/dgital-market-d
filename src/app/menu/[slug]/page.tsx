@@ -5,10 +5,27 @@ import MenuHeader from "@/components/menu/MenuHeader";
 import DailySpecial from "@/components/menu/DailySpecial";
 import CategoryNav from "@/components/menu/CategoryNav";
 import MenuSection from "@/components/menu/MenuSection";
-import BottomNav from "@/components/menu/BottomNav";
+
 import type { Restaurant, MenuCategory, MenuItem } from "@/types/menu";
 import type { Badge } from "@/types/menu";
 import type { Metadata } from "next";
+
+/** Calcule si le texte par-dessus la couleur doit être blanc ou sombre */
+function onColor(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum > 0.45 ? "#1C1B1B" : "#ffffff";
+}
+
+/** Éclaircit légèrement un hex pour `--color-primary-container` */
+function lighten(hex: string, amount = 0.15): string {
+  const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + Math.round(255 * amount));
+  const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + Math.round(255 * amount));
+  const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + Math.round(255 * amount));
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
 
 export async function generateMetadata({
   params,
@@ -57,6 +74,8 @@ export default async function MenuPage({
     slug: dbRestaurant.slug,
     name: dbRestaurant.name,
     address: dbRestaurant.address ?? "",
+    logo: dbRestaurant.logo_url ?? undefined,
+    primaryColor: dbRestaurant.primary_color ?? undefined,
     categories,
     dailySpecial:
       menu?.daily_special_title
@@ -64,9 +83,11 @@ export default async function MenuPage({
         : undefined,
   };
 
+  const customColor = restaurant.primaryColor;
+
   return (
     <div
-      className="pb-32"
+      className="pb-10"
       style={{
         backgroundColor: "var(--color-background)",
         fontFamily: "var(--font-body)",
@@ -74,6 +95,15 @@ export default async function MenuPage({
         minHeight: "100dvh",
       }}
     >
+      {customColor && (
+        <style>{`
+          :root {
+            --color-primary: ${customColor};
+            --color-primary-container: ${lighten(customColor)};
+            --color-on-primary: ${onColor(customColor)};
+          }
+        `}</style>
+      )}
       <MenuHeader restaurant={restaurant} />
 
       <main className="pt-32 px-5 pb-10 max-w-lg mx-auto">
@@ -99,7 +129,6 @@ export default async function MenuPage({
         )}
       </main>
 
-      <BottomNav />
     </div>
   );
 }

@@ -26,7 +26,7 @@ export default async function QRPage() {
         </p>
       </header>
 
-      <QRGenerator restaurantName={restaurant.name} menuUrl={menuUrl} />
+      <QRGenerator restaurantName={restaurant.name} menuUrl={menuUrl} logoUrl={restaurant.logo_url} />
     </div>
   );
 }

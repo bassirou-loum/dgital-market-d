@@ -31,6 +31,7 @@ export interface Restaurant {
   name: string;
   address: string;
   logo?: string;
+  primaryColor?: string;
   coverImage?: string;
   dailySpecial?: {
     title: string;

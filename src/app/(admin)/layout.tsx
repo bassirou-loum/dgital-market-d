@@ -33,8 +33,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-dvh" style={{ backgroundColor: "#F6F4F2", fontFamily: "var(--font-body)" }}>
-      <AdminTopBar />
-      <AdminSidebar restaurantName={restaurant.name} restaurantSlug={restaurant.slug} isEmployee={teamMember} />
+      <AdminTopBar logoUrl={restaurant.logo_url} restaurantName={restaurant.name} restaurantSlug={restaurant.slug} />
+      <AdminSidebar restaurantName={restaurant.name} restaurantSlug={restaurant.slug} isEmployee={teamMember} logoUrl={restaurant.logo_url} />
 
       {/* Main content */}
       <main className="pt-16 pb-24 md:pb-8 md:pl-60">

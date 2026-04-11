@@ -15,10 +15,12 @@ export default function AdminSidebar({
   restaurantName,
   restaurantSlug,
   isEmployee = false,
+  logoUrl,
 }: {
   restaurantName: string;
   restaurantSlug: string;
   isEmployee?: boolean;
+  logoUrl?: string | null;
 }) {
   const pathname = usePathname();
   const router   = useRouter();
@@ -38,10 +40,14 @@ export default function AdminSidebar({
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 h-16 border-b border-[#EDE8E5] flex-shrink-0">
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0"
-          style={{ backgroundColor: "var(--color-primary)" }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0 overflow-hidden"
+          style={{ backgroundColor: logoUrl ? "#F6F4F2" : "var(--color-primary)" }}
         >
-          <span className="material-symbols-outlined text-white" style={{ fontSize: 18 }}>restaurant</span>
+          {logoUrl ? (
+            <img src={logoUrl} alt={restaurantName} className="w-full h-full object-cover" />
+          ) : (
+            <span className="material-symbols-outlined text-white" style={{ fontSize: 18 }}>restaurant</span>
+          )}
         </div>
         <div className="min-w-0">
           <p

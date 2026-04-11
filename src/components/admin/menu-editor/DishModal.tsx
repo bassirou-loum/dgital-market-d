@@ -129,17 +129,17 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{ backgroundColor: "rgba(28,27,27,0.6)", backdropFilter: "blur(4px)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+        className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] sm:max-h-[85dvh]"
         style={{ backgroundColor: "var(--color-surface-container-lowest)" }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 sm:px-6 py-5"
+          className="flex items-center justify-between px-4 sm:px-6 py-5 flex-shrink-0"
           style={{ borderBottom: "1px solid rgba(227,191,178,0.15)" }}
         >
           <div>
@@ -159,7 +159,7 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-5 space-y-4 max-h-[72vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="px-4 sm:px-6 py-5 space-y-4 flex-1 overflow-y-auto min-h-0">
 
           {/* Name */}
           <Field label="Nom du plat *">
@@ -394,7 +394,7 @@ export default function DishModal({ item, categoryName, onSave, onClose }: DishM
         </form>
 
         {/* Actions */}
-        <div className="flex gap-3 px-4 sm:px-6 py-5" style={{ borderTop: "1px solid rgba(227,191,178,0.15)" }}>
+        <div className="flex gap-3 px-4 sm:px-6 py-5 flex-shrink-0" style={{ borderTop: "1px solid rgba(227,191,178,0.15)" }}>
           <button
             type="button" onClick={onClose}
             className="flex-1 py-3 rounded-full font-bold text-sm transition-all"
